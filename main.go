@@ -10,6 +10,8 @@ import (
 func main() {
 	apiServer := rest.NewApi()
 	apiServer.Use(rest.DefaultDevStack...)
+
+	// Cors
 	apiServer.Use(&rest.CorsMiddleware{
 		RejectNonCorsRequests: false,
 		OriginValidator: func(origin string, request *rest.Request) bool {
@@ -21,6 +23,11 @@ func main() {
 		},
 		AccessControlAllowCredentials: true,
 		AccessControlMaxAge:           3600,
+	})
+
+	// Jsonp
+	apiServer.Use(&rest.JsonpMiddleware{
+		CallbackNameKey: "jsonp",
 	})
 
 	routes := mergeRouteSet(api.EventsRoutes, api.QueriesRoutes)
