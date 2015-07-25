@@ -23,7 +23,7 @@ func queryCountGet(w rest.ResponseWriter, req *rest.Request) {
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 	} else {
-		w.WriteJson(&repo.Doc{"result": result})
+		w.WriteJson(result)
 	}
 }
 
