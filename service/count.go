@@ -9,10 +9,8 @@ type CountParams struct {
 }
 
 func Count(dbName string, params *CountParams) (*repo.Doc, error) {
-	r, err := repo.NewRepository(dbName)
-	if err != nil {
-		return nil, err
-	}
+	r := repo.NewRepository(dbName)
+	defer r.Close()
 
 	if count, err := r.C(params.CollectionName).Count(); err != nil {
 		return nil, err

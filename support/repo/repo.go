@@ -12,13 +12,15 @@ type Repository struct {
 	database *mgo.Database
 }
 
-func NewRepository(dbName string) (*Repository, error) {
-	session, err := mgo.Dial("localhost")
-	if err != nil {
-		return nil, err
-	}
+var session *mgo.Session
 
-	return &Repository{session, session.DB(dbName)}, nil
+func NewRepository(dbName string) *Repository {
+	sess := session.Copy()
+	return &Repository{sess, sess.DB(dbName)}
+}
+
+func (this *Repository) Close() {
+	this.session.Close()
 }
 
 func (this *Repository) C(name string) *mgo.Collection {
@@ -27,4 +29,8 @@ func (this *Repository) C(name string) *mgo.Collection {
 
 func (this *Repository) Insert(name string, docs ...interface{}) error {
 	return this.C(name).Insert(docs...)
+}
+
+func init() {
+	session, _ = mgo.Dial("localhost")
 }

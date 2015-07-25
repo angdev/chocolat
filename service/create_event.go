@@ -11,12 +11,12 @@ type CreateEventParams struct {
 }
 
 func CreateEvent(dbName string, params *CreateEventParams) (*repo.Doc, error) {
-	r, err := repo.NewRepository(dbName)
-	if err != nil {
-		return nil, err
-	}
+	r := repo.NewRepository(dbName)
+	defer r.Close()
 
 	var event *repo.Doc
+	var err error
+
 	if params.EncodedData != "" {
 		event, err = support.DecodeData(params.EncodedData)
 		if err != nil {
@@ -24,7 +24,7 @@ func CreateEvent(dbName string, params *CreateEventParams) (*repo.Doc, error) {
 		}
 	}
 
-	if err := r.Insert(params.CollectionName, event); err != nil {
+	if err = r.Insert(params.CollectionName, event); err != nil {
 		return nil, err
 	} else {
 		return nil, nil
