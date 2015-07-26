@@ -5,14 +5,14 @@ import (
 	"labix.org/v2/mgo/bson"
 )
 
+var session *mgo.Session
+
 type Doc bson.M
 
 type Repository struct {
 	session  *mgo.Session
 	database *mgo.Database
 }
-
-var session *mgo.Session
 
 func NewRepository(dbName string) *Repository {
 	sess := session.Copy()

@@ -1,0 +1,7 @@
+development:
+  driver: sqlite3
+  open: ./db/development.sqlite3
+
+production:
+  driver: postgres
+  open: $DATABASE_URL

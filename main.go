@@ -2,12 +2,21 @@ package main
 
 import (
 	"github.com/angdev/chocolat/api"
+	"github.com/angdev/chocolat/model"
 	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Print(err.Error())
+	}
+
+	model.InitDB()
+
 	apiServer := rest.NewApi()
 	apiServer.Use(rest.DefaultDevStack...)
 
