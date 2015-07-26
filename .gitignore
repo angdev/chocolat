@@ -1,3 +1,4 @@
 chocolat
 gin-bin
 .env
+db/development.sqlite3

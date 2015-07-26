@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jinzhu/gorm"
+	"github.com/k0kubun/pp"
 	"github.com/kardianos/osext"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -24,7 +24,7 @@ var db *gorm.DB
 
 func DB() *gorm.DB {
 	if db == nil {
-		log.Fatal("Database is not initialized!")
+		pp.Fatal("Database is not initialized!")
 	}
 	return db
 }
@@ -42,13 +42,13 @@ func InitDB() {
 	env := envOrDefault()
 	conf, err := dbConfEnv(env)
 	if err != nil {
-		log.Fatal(err.Error())
+		pp.Fatal(err.Error())
 	}
 
-	log.Printf("Database initializing (%s)", conf)
+	pp.Printf("Database initializing (%s)\n", conf)
 
 	if opened, err := gorm.Open(conf.Driver, conf.Open); err != nil {
-		log.Fatal(err.Error())
+		pp.Fatal(err.Error())
 	} else {
 		db = &opened
 	}
@@ -65,19 +65,19 @@ func envOrDefault() string {
 func dbConfEnv(env string) (*dbConf, error) {
 	wd, err := osext.ExecutableFolder()
 	if err != nil {
-		log.Fatal("Cannot get executable directory path!")
+		pp.Fatal("Cannot get executable directory path!")
 	}
 
 	configPath := filepath.Join(wd, ConfigPath)
 	bytes, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Fatal("Cannot read database config file! - " + configPath)
+		pp.Fatal("Cannot read database config file! - " + configPath)
 	}
 
 	var conf map[string]*dbConf
 	err = yaml.Unmarshal(bytes, &conf)
 	if err != nil {
-		log.Fatal("Cannot unmarshal config file!")
+		pp.Fatal("Cannot unmarshal config file!")
 	}
 
 	if value, ok := conf[env]; ok {
