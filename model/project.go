@@ -68,3 +68,7 @@ func (this *Project) MasterKey() *ApiKey {
 		return &key
 	}
 }
+
+func (this *Project) RepoName() string {
+	return this.UUID
+}

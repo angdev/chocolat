@@ -6,7 +6,7 @@ import (
 	"github.com/angdev/chocolat/support/repo"
 )
 
-func DecodeData(data string) (*repo.Doc, error) {
+func DecodeData(data string) (repo.Doc, error) {
 	decoded, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		return nil, err
@@ -17,5 +17,5 @@ func DecodeData(data string) (*repo.Doc, error) {
 		return nil, err
 	}
 
-	return &unmarshalled, nil
+	return unmarshalled, nil
 }
