@@ -8,17 +8,27 @@ import (
 )
 
 var QueriesRoutes = Routes(
-	rest.Get("/projects/:project_id/queries/count", RequireReadKey(queryCountGet)),
-	rest.Post("/projects/:project_id/queries/count", RequireReadKey(queryCountPost)),
+	rest.Get("/projects/:project_id/queries/count", RequireReadKey(queryCount)),
+	rest.Post("/projects/:project_id/queries/count", RequireReadKey(queryCount)),
 )
 
-func queryCountGet(w rest.ResponseWriter, req *rest.Request) {
-	dbName := req.PathParam("project_id")
-	collName := req.FormValue("event_collection")
+func queryCount(w rest.ResponseWriter, req *rest.Request) {
+	project := CurrentProject(req)
 
-	result, err := service.Count(dbName, &service.CountParams{
-		CollectionName: collName,
-	})
+	var payload repo.Doc
+	if err := req.DecodeJsonPayload(&payload); err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	collName := eventCollection(req, payload)
+	params, err := service.NewCountParams(collName, payload)
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	result, err := service.Count(project, params)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
@@ -27,23 +37,11 @@ func queryCountGet(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func queryCountPost(w rest.ResponseWriter, req *rest.Request) {
-	dbName := req.PathParam("project_id")
-	payload := repo.Doc{}
-
-	if err := req.DecodeJsonPayload(&payload); err != nil {
-		rest.Error(w, err.Error(), http.StatusBadRequest)
-		return
+func eventCollection(req *rest.Request, payload repo.Doc) string {
+	if v, ok := payload["event_collection"]; ok {
+		return v.(string)
 	}
 
-	collName := payload["event_collection"].(string)
-	result, err := service.Count(dbName, &service.CountParams{
-		CollectionName: collName,
-	})
-
-	if err != nil {
-		rest.Error(w, err.Error(), http.StatusBadRequest)
-	} else {
-		w.WriteJson(result)
-	}
+	v := req.FormValue("event_collection")
+	return v
 }
