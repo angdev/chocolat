@@ -8,7 +8,7 @@ import (
 )
 
 var EventsRoutes = Routes(
-	rest.Get("/projects/:project_id/events/:event_name", createEvent),
+	rest.Get("/projects/:project_id/events/:event_name", RequireWriteKey(createEvent)),
 )
 
 func createEvent(w rest.ResponseWriter, req *rest.Request) {

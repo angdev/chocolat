@@ -8,8 +8,8 @@ import (
 )
 
 var QueriesRoutes = Routes(
-	rest.Get("/projects/:project_id/queries/count", queryCountGet),
-	rest.Post("/projects/:project_id/queries/count", queryCountPost),
+	rest.Get("/projects/:project_id/queries/count", RequireReadKey(queryCountGet)),
+	rest.Post("/projects/:project_id/queries/count", RequireReadKey(queryCountPost)),
 )
 
 func queryCountGet(w rest.ResponseWriter, req *rest.Request) {

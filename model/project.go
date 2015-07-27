@@ -29,27 +29,42 @@ func (this *Project) AfterCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (this *Project) apiKeys(out *[]ApiKey) *gorm.DB {
-	return DB().Model(this).Related(out)
+func ProjectByUUID(uuid string) *Project {
+	var project Project
+	if DB().First(&project, &Project{UUID: uuid}).RecordNotFound() {
+		return nil
+	} else {
+		return &project
+	}
+}
+
+func (this *Project) apiKeys(out []ApiKey) *gorm.DB {
+	return DB().Model(this).Related(&out)
 }
 
 func (this *Project) ReadKey() *ApiKey {
 	var key ApiKey
-	this.apiKeys(nil).First(&key, &ApiKey{Scope: ApiReadKey})
-
-	return &key
+	if this.apiKeys([]ApiKey{}).First(&key, &ApiKey{Scope: ApiReadKey}).RecordNotFound() {
+		return nil
+	} else {
+		return &key
+	}
 }
 
 func (this *Project) WriteKey() *ApiKey {
 	var key ApiKey
-	this.apiKeys(nil).First(&key, &ApiKey{Scope: ApiWriteKey})
-
-	return &key
+	if this.apiKeys([]ApiKey{}).First(&key, &ApiKey{Scope: ApiWriteKey}).RecordNotFound() {
+		return nil
+	} else {
+		return &key
+	}
 }
 
 func (this *Project) MasterKey() *ApiKey {
 	var key ApiKey
-	this.apiKeys(nil).First(&key, &ApiKey{Scope: ApiMasterKey})
-
-	return &key
+	if this.apiKeys([]ApiKey{}).First(&key, &ApiKey{Scope: ApiMasterKey}).RecordNotFound() {
+		return nil
+	} else {
+		return &key
+	}
 }

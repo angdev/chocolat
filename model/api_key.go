@@ -19,6 +19,15 @@ func (this *ApiKey) TableName() string {
 	return "api_keys"
 }
 
+func ApiKeyByValue(value string) *ApiKey {
+	var key ApiKey
+	if DB().First(&key, &ApiKey{Value: value}).RecordNotFound() {
+		return nil
+	} else {
+		return &key
+	}
+}
+
 type ApiScope int64
 
 const (
