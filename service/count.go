@@ -3,27 +3,19 @@ package service
 import (
 	"github.com/angdev/chocolat/model"
 	"github.com/angdev/chocolat/support/repo"
+	"github.com/k0kubun/pp"
 )
 
 func NewCountParams(collName string, params repo.Doc) (*CountParams, error) {
-	ok := false
+	var cp CountParams
 	var err error
-	var out interface{}
 
-	var countParams CountParams
-	countParams.CollectionName = collName
-	if out, ok = params["timeframe"]; ok {
-		if countParams.TimeFrame, err = NewTimeFrame(out); err != nil {
-			return nil, err
-		}
-	}
-
-	return &countParams, nil
+	cp.QueryParams, err = NewQueryParams(collName, params)
+	return &cp, err
 }
 
 type CountParams struct {
-	CollectionName string
-	TimeFrame      *TimeFrame
+	*QueryParams
 }
 
 func Count(p *model.Project, params *CountParams) (repo.Doc, error) {
@@ -34,28 +26,47 @@ func Count(p *model.Project, params *CountParams) (repo.Doc, error) {
 	if params.TimeFrame != nil {
 		pipes = append(pipes, params.TimeFrame.Pipe())
 	}
-	pipes = append(pipes, countPipe())
+	pipes = append(pipes, params.GroupBy.Pipe(countOp()))
+	pipes = append(pipes, countProject(params.GroupBy))
 
 	pipe := r.C(params.CollectionName).Pipe(pipes)
 	iter := pipe.Iter()
 
-	result := []repo.Doc{}
-	if err := iter.All(&result); err != nil {
+	var result []repo.Doc
+	var d repo.Doc
+	for iter.Next(&d) {
+		result = append(result, collapseField(d))
+	}
+	if err := iter.Close(); err != nil {
 		return nil, err
 	}
 
-	if len(result) != 0 {
-		return repo.Doc{"result": result[0]["count"]}, nil
-	} else {
+	pp.Println(result)
+
+	if len(params.GroupBy) != 0 {
+		return repo.Doc{"result": result}, nil
+	} else if len(result) == 0 {
 		return repo.Doc{"result": 0}, nil
+	} else {
+		return result[0], nil
 	}
 }
 
-func countPipe() repo.Doc {
+func countOp() repo.Doc {
 	return repo.Doc{
-		"$group": repo.Doc{
-			"_id":   nil,
-			"count": repo.Doc{"$sum": 1},
-		},
+		"count": repo.Doc{"$sum": 1},
+	}
+}
+
+func countProject(g GroupBy) repo.Doc {
+	project := repo.Doc{}
+	for _, field := range g {
+		project[field] = variablize("_id", field)
+	}
+	project["_id"] = false
+	project["result"] = variablize("count")
+
+	return repo.Doc{
+		"$project": project,
 	}
 }
