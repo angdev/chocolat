@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/angdev/chocolat/model"
 	"github.com/angdev/chocolat/support/repo"
+	"time"
 )
 
 type CreateEventParams struct {
@@ -39,6 +40,7 @@ func CreateMultipleEvents(p *model.Project, params *CreateEventParams) (map[stri
 func insertEvents(r *repo.Repository, event string, docs ...repo.Doc) []repo.Doc {
 	result := []repo.Doc{}
 	for _, doc := range docs {
+		appendMetadata(doc)
 		if err := r.Insert(event, &doc); err != nil {
 			result = append(result, repo.Doc{"success": false})
 		} else {
@@ -47,4 +49,11 @@ func insertEvents(r *repo.Repository, event string, docs ...repo.Doc) []repo.Doc
 	}
 
 	return result
+}
+
+func appendMetadata(doc repo.Doc) {
+	metadata := map[string]interface{}{}
+	metadata["created_at"] = time.Now()
+
+	doc["chocolat"] = metadata
 }

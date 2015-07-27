@@ -1,10 +1,7 @@
 package service
 
 import (
-	"errors"
 	"github.com/angdev/chocolat/model"
-	"time"
-
 	"github.com/angdev/chocolat/support/repo"
 )
 
@@ -29,44 +26,36 @@ type CountParams struct {
 	TimeFrame      *TimeFrame
 }
 
-type TimeFrame struct {
-	Start time.Time
-	End   time.Time
-}
-
-func NewTimeFrame(t interface{}) (*TimeFrame, error) {
-	switch t.(type) {
-	case string:
-		return nil, errors.New("Not implemented")
-	case map[string]interface{}:
-		v, err := absoluteTimeFrame(t.(map[string]interface{}))
-		return v, err
-	default:
-		return nil, errors.New("Invalid timeframe")
-	}
-}
-
-func absoluteTimeFrame(v map[string]interface{}) (*TimeFrame, error) {
-	start, err := time.Parse(time.RFC3339, v["start"].(string))
-	if err != nil {
-		return nil, err
-	}
-
-	end, err := time.Parse(time.RFC3339, v["end"].(string))
-	if err != nil {
-		return nil, err
-	}
-
-	return &TimeFrame{Start: start, End: end}, nil
-}
-
 func Count(p *model.Project, params *CountParams) (repo.Doc, error) {
 	r := repo.NewRepository(p.RepoName())
 	defer r.Close()
 
-	if count, err := r.C(params.CollectionName).Count(); err != nil {
+	pipes := []repo.Doc{}
+	if params.TimeFrame != nil {
+		pipes = append(pipes, params.TimeFrame.Pipe())
+	}
+	pipes = append(pipes, countPipe())
+
+	pipe := r.C(params.CollectionName).Pipe(pipes)
+	iter := pipe.Iter()
+
+	result := []repo.Doc{}
+	if err := iter.All(&result); err != nil {
 		return nil, err
+	}
+
+	if len(result) != 0 {
+		return repo.Doc{"result": result[0]["count"]}, nil
 	} else {
-		return repo.Doc{"result": count}, nil
+		return repo.Doc{"result": 0}, nil
+	}
+}
+
+func countPipe() repo.Doc {
+	return repo.Doc{
+		"$group": repo.Doc{
+			"_id":   nil,
+			"count": repo.Doc{"$sum": 1},
+		},
 	}
 }
