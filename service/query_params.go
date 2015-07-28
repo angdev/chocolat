@@ -1,43 +1,23 @@
 package service
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/angdev/chocolat/support/repo"
 	"strings"
 	"time"
 )
 
 type QueryParams struct {
-	CollectionName string
-	TimeFrame      *TimeFrame
-	GroupBy        GroupBy
-}
-
-func NewQueryParams(collName string, params repo.Doc) (*QueryParams, error) {
-	ok := false
-	var err error
-	var out interface{}
-
-	var qp QueryParams
-	qp.CollectionName = collName
-
-	if out, ok = params["timeframe"]; ok {
-		if qp.TimeFrame, err = NewTimeFrame(out); err != nil {
-			return nil, err
-		}
-	}
-
-	if out, ok = params["group_by"]; ok {
-		if qp.GroupBy, err = NewGroupBy(out); err != nil {
-			return nil, err
-		}
-	}
-
-	return &qp, nil
+	CollectionName string     `json:"event_collection"`
+	TimeFrame      *TimeFrame `json:"timeframe"`
+	GroupBy        *GroupBy   `json:"group_by"`
 }
 
 type TimeFrame struct {
-	Start time.Time
-	End   time.Time
+	Start    time.Time
+	End      time.Time
+	Absolute bool
 }
 
 type TimeFrameError struct{}
@@ -46,40 +26,24 @@ func (TimeFrameError) Error() string {
 	return "Invalid timeframe"
 }
 
-func NewTimeFrame(t interface{}) (*TimeFrame, error) {
-	switch t.(type) {
-	case string:
-		return nil, TimeFrameError{}
-	case map[string]interface{}:
-		v, err := absoluteTimeFrame(t.(map[string]interface{}))
-		return v, err
-	default:
-		return nil, TimeFrameError{}
-	}
-}
-
-func absoluteTimeFrame(v map[string]interface{}) (*TimeFrame, error) {
-	s, ok := v["start"].(string)
-	if !ok {
-		return nil, TimeFrameError{}
+func (t *TimeFrame) UnmarshalJSON(data []byte) error {
+	var abs struct {
+		Start time.Time `json:"start"`
+		End   time.Time `json:"end"`
 	}
 
-	e, ok := v["end"].(string)
-	if !ok {
-		return nil, TimeFrameError{}
-	}
+	var rel string
 
-	start, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		return nil, err
+	if err := json.Unmarshal(data, &abs); err == nil {
+		t.Start = abs.Start
+		t.End = abs.End
+		t.Absolute = true
+		return nil
+	} else if err = json.Unmarshal(data, &rel); err == nil {
+		return errors.New("Relative timeframe is not implemented")
+	} else {
+		return TimeFrameError{}
 	}
-
-	end, err := time.Parse(time.RFC3339, e)
-	if err != nil {
-		return nil, err
-	}
-
-	return &TimeFrame{Start: start, End: end}, nil
 }
 
 // Create a mongo aggregation pipeline format
@@ -99,20 +63,19 @@ func (GroupByError) Error() string {
 	return "Invalid group_by"
 }
 
-func NewGroupBy(g interface{}) (GroupBy, error) {
-	switch g.(type) {
-	case string:
-		return GroupBy{g.(string)}, nil
-	case []interface{}:
-		gs := g.([]interface{})
-		groups := make([]string, len(gs))
-		for i, v := range gs {
-			groups[i] = v.(string)
-		}
-		return GroupBy(groups), nil
-	default:
-		return nil, GroupByError{}
+func (g *GroupBy) UnmarshalJSON(data []byte) error {
+	var multi []string
+	var single string
+
+	if err := json.Unmarshal(data, &multi); err == nil {
+		*g = multi
+	} else if err = json.Unmarshal(data, &single); err == nil {
+		*g = []string{single}
+	} else {
+		return GroupByError{}
 	}
+
+	return nil
 }
 
 func (this GroupBy) Pipe(ops ...repo.Doc) repo.Doc {

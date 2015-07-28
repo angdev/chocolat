@@ -1,9 +1,10 @@
 package api
 
 import (
+	"errors"
 	"github.com/angdev/chocolat/service"
-	"github.com/angdev/chocolat/support/repo"
 	"github.com/ant0ine/go-json-rest/rest"
+	"github.com/k0kubun/pp"
 	"net/http"
 )
 
@@ -15,20 +16,16 @@ var QueriesRoutes = Routes(
 func queryCount(w rest.ResponseWriter, req *rest.Request) {
 	project := CurrentProject(req)
 
-	var payload repo.Doc
-	if err := req.DecodeJsonPayload(&payload); err != nil {
+	var params service.CountParams
+	if err := req.DecodeJsonPayload(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	ensureEventCollection(req, &params.QueryParams)
 
-	collName := eventCollection(req, payload)
-	params, err := service.NewCountParams(collName, payload)
-	if err != nil {
-		rest.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
+	pp.Println(params)
 
-	result, err := service.Count(project, params)
+	result, err := service.Count(project, &params)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
@@ -37,11 +34,15 @@ func queryCount(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func eventCollection(req *rest.Request, payload repo.Doc) string {
-	if v, ok := payload["event_collection"]; ok {
-		return v.(string)
+func ensureEventCollection(req *rest.Request, params *service.QueryParams) error {
+	if params.CollectionName != "" {
+		return nil
 	}
 
-	v := req.FormValue("event_collection")
-	return v
+	if v := req.FormValue("event_collection"); v != "" {
+		params.CollectionName = v
+		return nil
+	} else {
+		return errors.New("event_collection is missing")
+	}
 }

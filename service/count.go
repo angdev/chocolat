@@ -3,19 +3,10 @@ package service
 import (
 	"github.com/angdev/chocolat/model"
 	"github.com/angdev/chocolat/support/repo"
-	"github.com/k0kubun/pp"
 )
 
-func NewCountParams(collName string, params repo.Doc) (*CountParams, error) {
-	var cp CountParams
-	var err error
-
-	cp.QueryParams, err = NewQueryParams(collName, params)
-	return &cp, err
-}
-
 type CountParams struct {
-	*QueryParams
+	QueryParams
 }
 
 func Count(p *model.Project, params *CountParams) (repo.Doc, error) {
@@ -41,9 +32,7 @@ func Count(p *model.Project, params *CountParams) (repo.Doc, error) {
 		return nil, err
 	}
 
-	pp.Println(result)
-
-	if len(params.GroupBy) != 0 {
+	if params.GroupBy != nil {
 		return repo.Doc{"result": result}, nil
 	} else if len(result) == 0 {
 		return repo.Doc{"result": 0}, nil
@@ -58,9 +47,9 @@ func countOp() repo.Doc {
 	}
 }
 
-func countProject(g GroupBy) repo.Doc {
+func countProject(g *GroupBy) repo.Doc {
 	project := repo.Doc{}
-	for _, field := range g {
+	for _, field := range *g {
 		project[field] = variablize("_id", field)
 	}
 	project["_id"] = false
