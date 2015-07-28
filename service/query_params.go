@@ -3,15 +3,17 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/angdev/chocolat/support/repo"
 	"strings"
 	"time"
 )
 
 type QueryParams struct {
-	CollectionName string     `json:"event_collection"`
-	TimeFrame      *TimeFrame `json:"timeframe"`
-	GroupBy        *GroupBy   `json:"group_by"`
+	CollectionName string    `json:"event_collection"`
+	TimeFrame      TimeFrame `json:"timeframe"`
+	GroupBy        GroupBy   `json:"group_by"`
+	Filters        Filters   `json:"filters"`
 }
 
 type TimeFrame struct {
@@ -47,7 +49,11 @@ func (t *TimeFrame) UnmarshalJSON(data []byte) error {
 }
 
 // Create a mongo aggregation pipeline format
-func (this *TimeFrame) Pipe() repo.Doc {
+func (this *TimeFrame) Pipe(...repo.Doc) repo.Doc {
+	if this.Start.IsZero() && this.End.IsZero() {
+		return nil
+	}
+
 	return repo.Doc{
 		"$match": repo.Doc{
 			"chocolat.created_at": repo.Doc{"$gt": this.Start, "$lt": this.End},
@@ -79,8 +85,16 @@ func (g *GroupBy) UnmarshalJSON(data []byte) error {
 }
 
 func (this GroupBy) Pipe(ops ...repo.Doc) repo.Doc {
-	group := repo.Doc{
-		"_id": expandFields(this),
+	group := repo.Doc{}
+
+	if len(this) == 0 {
+		group["_id"] = nil
+	} else {
+		criteria := repo.Doc{}
+		for _, field := range this {
+			criteria[field] = variablize(field)
+		}
+		group["_id"] = expandField(criteria)
 	}
 
 	for _, op := range ops {
@@ -94,19 +108,50 @@ func (this GroupBy) Pipe(ops ...repo.Doc) repo.Doc {
 	}
 }
 
-func expandFields(fields []string) repo.Doc {
-	if len(fields) == 0 {
+type Filter struct {
+	PropertyName  string      `json:"property_name"`
+	Operator      string      `json:"operator"`
+	PropertyValue interface{} `json:"property_value"`
+}
+
+type FilterError struct{}
+
+func (f *Filter) QueryOp() repo.Doc {
+	op := repo.Doc{}
+
+	switch f.Operator {
+	case "contains":
+		op["$regex"] = fmt.Sprintf("/%s/", f.PropertyValue.(string))
+	case "not_contains":
+		op["$regex"] = fmt.Sprintf("/^(%s)/", f.PropertyValue.(string))
+	default:
+		op[fmt.Sprintf("$%s", f.Operator)] = f.PropertyValue
+	}
+
+	return op
+}
+
+func (FilterError) Error() string {
+	return "Invalid filter"
+}
+
+type Filters []Filter
+
+func (f Filters) Pipe(...repo.Doc) repo.Doc {
+	if len(f) == 0 {
 		return nil
 	}
 
-	expanded := repo.Doc{}
+	match := map[string]interface{}{}
 
-	for _, field := range fields {
-		keys := strings.Split(field, ".")
-		deepAssign(expanded, variablize(field), keys...)
+	for _, filter := range f {
+		op := filter.QueryOp()
+		match[filter.PropertyName] = op
 	}
 
-	return expanded
+	return repo.Doc{
+		"$match": expandField(match),
+	}
 }
 
 func collapseField(doc repo.Doc) repo.Doc {
@@ -127,6 +172,18 @@ func collapseField(doc repo.Doc) repo.Doc {
 	f([]string{}, doc)
 
 	return collapsed
+}
+
+func expandField(doc repo.Doc) repo.Doc {
+	expanded := repo.Doc{}
+	collapsed := collapseField(doc)
+
+	for k, v := range collapsed {
+		keys := strings.Split(k, ".")
+		deepAssign(expanded, v, keys...)
+	}
+
+	return expanded
 }
 
 func variablize(fields ...string) string {

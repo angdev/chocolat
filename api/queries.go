@@ -4,7 +4,6 @@ import (
 	"errors"
 	"github.com/angdev/chocolat/service"
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/k0kubun/pp"
 	"net/http"
 )
 
@@ -22,8 +21,6 @@ func queryCount(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 	ensureEventCollection(req, &params.QueryParams)
-
-	pp.Println(params)
 
 	result, err := service.Count(project, &params)
 
