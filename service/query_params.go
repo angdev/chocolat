@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/angdev/chocolat/support/repo"
-	"strings"
+	"github.com/jinzhu/now"
 	"time"
 )
 
@@ -14,12 +14,13 @@ type QueryParams struct {
 	TimeFrame      TimeFrame `json:"timeframe"`
 	GroupBy        GroupBy   `json:"group_by"`
 	Filters        Filters   `json:"filters"`
+	Interval       Interval  `json:"interval"`
 }
 
 type TimeFrame struct {
-	Start    time.Time
-	End      time.Time
-	Absolute bool
+	Start    time.Time `json:"start"`
+	End      time.Time `json:"end"`
+	absolute bool
 }
 
 type TimeFrameError struct{}
@@ -39,7 +40,7 @@ func (t *TimeFrame) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &abs); err == nil {
 		t.Start = abs.Start
 		t.End = abs.End
-		t.Absolute = true
+		t.absolute = true
 		return nil
 	} else if err = json.Unmarshal(data, &rel); err == nil {
 		return errors.New("Relative timeframe is not implemented")
@@ -48,17 +49,21 @@ func (t *TimeFrame) UnmarshalJSON(data []byte) error {
 	}
 }
 
+func (this *TimeFrame) IsGiven() bool {
+	return !(this.Start.IsZero() && this.End.IsZero())
+}
+
 // Create a mongo aggregation pipeline format
-func (this *TimeFrame) Pipe(...repo.Doc) repo.Doc {
-	if this.Start.IsZero() && this.End.IsZero() {
+func (this *TimeFrame) Pipe(...repo.Doc) Pipe {
+	if !this.IsGiven() {
 		return nil
 	}
 
-	return repo.Doc{
+	return NewPipe(PipeStage{
 		"$match": repo.Doc{
 			"chocolat.created_at": repo.Doc{"$gt": this.Start, "$lt": this.End},
 		},
-	}
+	})
 }
 
 type GroupBy []string
@@ -84,7 +89,7 @@ func (g *GroupBy) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (this GroupBy) Pipe(ops ...repo.Doc) repo.Doc {
+func (this GroupBy) Pipe(ops ...repo.Doc) Pipe {
 	group := repo.Doc{}
 
 	if len(this) == 0 {
@@ -103,9 +108,18 @@ func (this GroupBy) Pipe(ops ...repo.Doc) repo.Doc {
 		}
 	}
 
-	return repo.Doc{
-		"$group": group,
+	project := repo.Doc{}
+	for _, field := range this {
+		project[field] = variablize("_id", field)
 	}
+	project["_id"] = false
+	project["result"] = variablize("result")
+
+	return NewPipe(PipeStage{
+		"$group": group,
+	}, PipeStage{
+		"$project": project,
+	})
 }
 
 type Filter struct {
@@ -137,7 +151,7 @@ func (FilterError) Error() string {
 
 type Filters []Filter
 
-func (f Filters) Pipe(...repo.Doc) repo.Doc {
+func (f Filters) Pipe(...repo.Doc) Pipe {
 	if len(f) == 0 {
 		return nil
 	}
@@ -149,59 +163,22 @@ func (f Filters) Pipe(...repo.Doc) repo.Doc {
 		match[filter.PropertyName] = op
 	}
 
-	return repo.Doc{
+	return NewPipe(PipeStage{
 		"$match": expandField(match),
-	}
+	})
 }
 
-func collapseField(doc repo.Doc) repo.Doc {
-	collapsed := repo.Doc{}
+type Interval string
 
-	var f func([]string, repo.Doc)
-	f = func(level []string, cursor repo.Doc) {
-		for k, v := range cursor {
-			switch v.(type) {
-			case repo.Doc:
-				f(append(level, k), v.(repo.Doc))
-			default:
-				collapsed[strings.Join(append(level, k), ".")] = v
-			}
-		}
-	}
-
-	f([]string{}, doc)
-
-	return collapsed
+func (i *Interval) IsGiven() bool {
+	return (*i) != ""
 }
 
-func expandField(doc repo.Doc) repo.Doc {
-	expanded := repo.Doc{}
-	collapsed := collapseField(doc)
-
-	for k, v := range collapsed {
-		keys := strings.Split(k, ".")
-		deepAssign(expanded, v, keys...)
+func (i *Interval) NextTime(t time.Time) time.Time {
+	switch *i {
+	case "daily":
+		return now.New(t.AddDate(0, 0, 1)).BeginningOfDay()
 	}
-
-	return expanded
-}
-
-func variablize(fields ...string) string {
-	if len(fields) == 0 {
-		return ""
-	} else {
-		return "$" + strings.Join(fields, ".")
-	}
-}
-
-func deepAssign(d repo.Doc, value interface{}, keys ...string) {
-	cursor := d
-	midKeys, lastKey := keys[:len(keys)-1], keys[len(keys)-1]
-	for _, key := range midKeys {
-		if _, ok := cursor[key]; !ok {
-			cursor[key] = repo.Doc{}
-		}
-		cursor = cursor[key].(repo.Doc)
-	}
-	cursor[lastKey] = value
+	// temp
+	return t
 }
