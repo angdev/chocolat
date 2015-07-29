@@ -25,21 +25,6 @@ func NewAggregator(p *model.Project, params *QueryParams) *Aggregator {
 	return &Aggregator{project: p, params: params}
 }
 
-func (this *Aggregator) Count() (interface{}, error) {
-	r := repo.NewRepository(this.project.RepoName())
-	defer r.Close()
-
-	c := r.C(this.params.CollectionName)
-	pipeline := countPipeline(c, this.params)
-
-	if this.params.Interval.IsGiven() {
-		result, err := intervalAggregate(pipeline, this.params)
-		return result, err
-	}
-
-	return aggregate(pipeline, this.params)
-}
-
 func aggregate(p *Pipeline, params *QueryParams) (*AggregateResult, error) {
 	result, err := p.Result()
 	return &AggregateResult{Result: result}, err
@@ -69,9 +54,52 @@ func intervalAggregate(p *Pipeline, params *QueryParams) (*AggregateResult, erro
 	return &AggregateResult{Result: results}, nil
 }
 
+func (this *Aggregator) Count() (interface{}, error) {
+	r := repo.NewRepository(this.project.RepoName())
+	defer r.Close()
+
+	c := r.C(this.params.CollectionName)
+	pipeline := countPipeline(c, this.params)
+
+	if this.params.Interval.IsGiven() {
+		result, err := intervalAggregate(pipeline, this.params)
+		return result, err
+	}
+
+	return aggregate(pipeline, this.params)
+}
+
 func countPipeline(c *mgo.Collection, params *QueryParams) *Pipeline {
 	pipeline := NewPipeline(c)
 	pipeline.Append(params.Filters.Pipe())
+	pipeline.Append(params.GroupBy.Pipe(repo.Doc{
+		"result": repo.Doc{"$sum": 1},
+	}))
+
+	return pipeline
+}
+
+func (this *Aggregator) CountUnique(target string) (interface{}, error) {
+	r := repo.NewRepository(this.project.RepoName())
+	defer r.Close()
+
+	c := r.C(this.params.CollectionName)
+	pipeline := countUniquePipeline(c, this.params, target)
+
+	if this.params.Interval.IsGiven() {
+		result, err := intervalAggregate(pipeline, this.params)
+		return result, err
+	}
+
+	return aggregate(pipeline, this.params)
+}
+
+func countUniquePipeline(c *mgo.Collection, params *QueryParams, target string) *Pipeline {
+	pipeline := NewPipeline(c)
+	pipeline.Append(params.Filters.Pipe())
+
+	targetGroup := append(params.GroupBy, target)
+	pipeline.Append(targetGroup.Pipe())
 	pipeline.Append(params.GroupBy.Pipe(repo.Doc{
 		"result": repo.Doc{"$sum": 1},
 	}))

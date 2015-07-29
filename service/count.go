@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/angdev/chocolat/model"
-	"github.com/k0kubun/pp"
 )
 
 type CountParams struct {
@@ -14,7 +13,6 @@ func Count(p *model.Project, params *CountParams) (interface{}, error) {
 	if result, err := a.Count(); err != nil {
 		return nil, err
 	} else {
-		pp.Println(result)
 		return result, nil
 	}
 }

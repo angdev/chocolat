@@ -10,6 +10,8 @@ import (
 var QueriesRoutes = Routes(
 	rest.Get("/projects/:project_id/queries/count", RequireReadKey(queryCount)),
 	rest.Post("/projects/:project_id/queries/count", RequireReadKey(queryCount)),
+	rest.Get("/projects/:project_id/queries/count_unique", RequireReadKey(queryUniqueCount)),
+	rest.Post("/projects/:project_id/queries/count_unique", RequireReadKey(queryUniqueCount)),
 )
 
 func queryCount(w rest.ResponseWriter, req *rest.Request) {
@@ -23,6 +25,25 @@ func queryCount(w rest.ResponseWriter, req *rest.Request) {
 	ensureEventCollection(req, &params.QueryParams)
 
 	result, err := service.Count(project, &params)
+
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+	} else {
+		w.WriteJson(result)
+	}
+}
+
+func queryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
+	project := CurrentProject(req)
+
+	var params service.CountUniqueParams
+	if err := req.DecodeJsonPayload(&params); err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ensureEventCollection(req, &params.QueryParams)
+
+	result, err := service.CountUnique(project, &params)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
