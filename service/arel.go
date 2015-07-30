@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/angdev/chocolat/support/repo"
-	"github.com/k0kubun/pp"
 	"gopkg.in/fatih/set.v0"
 )
 
@@ -54,6 +53,18 @@ func (this *Arel) Where(filters ...Filter) *Arel {
 func (this *Arel) GroupBy(groups ...string) *Arel {
 	this.group.Append(groups...)
 	return this
+}
+
+func (this *Arel) TimeFrame(t TimeFrame) *Arel {
+	return this.Where(Filter{
+		PropertyName:  "chocolat.created_at",
+		Operator:      "gt",
+		PropertyValue: t.Start,
+	}, Filter{
+		PropertyName:  "chocolat.created_at",
+		Operator:      "lt",
+		PropertyValue: t.End,
+	})
 }
 
 func (this *Arel) Count() *Arel {
@@ -110,7 +121,6 @@ func (this *WhereNode) Clone() *WhereNode {
 
 func (this *WhereNode) Append(filters ...Filter) {
 	this.filters = append(this.filters, filters...)
-	pp.Println(this.filters)
 }
 
 func (this *WhereNode) Visit(arel *Arel) Pipe {

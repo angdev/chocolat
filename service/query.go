@@ -1,6 +1,7 @@
 package service
 
 import (
+	"gopkg.in/fatih/set.v0"
 	"labix.org/v2/mgo"
 )
 
@@ -26,6 +27,50 @@ func (this *Query) Execute() (interface{}, error) {
 	return result, err
 }
 
+func (this *Query) ExecuteWithInterval(t TimeFrame, i Interval) (interface{}, error) {
+	var results []IntervalResult
+
+	start := t.Start
+	frameEnd := t.End
+
+	for start.Before(frameEnd) {
+		end := i.NextTime(start)
+		timeframe := TimeFrame{Start: start, End: end}
+		arel := this.arel.Clone().TimeFrame(timeframe)
+		q := NewQuery(this.collection, arel)
+
+		if result, err := q.Execute(); err != nil {
+			return nil, err
+		} else {
+			results = append(results, IntervalResult{Value: result, TimeFrame: &timeframe})
+		}
+
+		start = end
+	}
+
+	if this.arel.group.IsGiven() {
+		results = this.flattenResults(results)
+	}
+	return results, nil
+}
+
+func (this *Query) flattenResults(results []IntervalResult) []IntervalResult {
+	// Support only one group by field
+	groupColumn := this.arel.group.groups[0]
+	values := set.New()
+	for _, result := range results {
+		values = set.Union(values, result.Value.(GroupQueryResult).GroupValues(groupColumn)).(*set.Set)
+	}
+
+	var r []IntervalResult
+	for _, result := range results {
+		result.Value = result.Value.(GroupQueryResult).ensureGroupValues(groupColumn, values)
+		r = append(r, result)
+	}
+
+	return r
+}
+
 func (this *Query) fetchResult() ([]QueryResult, error) {
 	var result []QueryResult
 	p := this.arel.Pipeline()
@@ -38,22 +83,61 @@ func (this *Query) fetchResult() ([]QueryResult, error) {
 }
 
 func (this *Query) execute() (interface{}, error) {
-	result, err := this.fetchResult()
-	if err != nil {
+	if result, err := this.fetchResult(); err != nil {
 		return nil, err
 	} else if result != nil {
-		return result[0].Value(), nil
+		return QueryResult(result[0]), nil
 	} else {
-		return 0, nil
+		return QueryResult(nil), nil
 	}
 }
 
 func (this *Query) executeGroupBy() (interface{}, error) {
-	return this.fetchResult()
+	if result, err := this.fetchResult(); err != nil {
+		return nil, err
+	} else {
+		return GroupQueryResult(result), nil
+	}
 }
 
 type QueryResult map[string]interface{}
 
 func (this QueryResult) Value() interface{} {
-	return this["result"]
+	if this == nil {
+		return nil
+	} else {
+		return this["result"]
+	}
+}
+
+type GroupQueryResult []QueryResult
+
+func (this GroupQueryResult) Value() interface{} {
+	return this
+}
+
+func (this GroupQueryResult) GroupValues(groupName string) *set.Set {
+	values := set.New()
+	for _, result := range this {
+		values.Add(result[groupName])
+	}
+	return values
+}
+
+func (this GroupQueryResult) ensureGroupValues(groupName string, values *set.Set) GroupQueryResult {
+	notExisting := set.Difference(values, this.GroupValues(groupName)).List()
+	ensured := this
+
+	for _, value := range notExisting {
+		ensured = append(ensured, QueryResult{
+			"result":  nil,
+			groupName: value,
+		})
+	}
+	return ensured
+}
+
+type IntervalQueryResult struct {
+	Value     interface{}
+	TimeFrame TimeFrame
 }

@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/angdev/chocolat/model"
 	"github.com/angdev/chocolat/support/repo"
-	"github.com/k0kubun/pp"
 )
 
 type AggregateResult struct {
@@ -56,31 +55,24 @@ func (this *Aggregator) Count() (interface{}, error) {
 
 	t := this.params.TimeFrame
 	if t.IsGiven() {
-		arel = arel.Where(Filter{
-			PropertyName:  "chocolat.created_at",
-			Operator:      "gt",
-			PropertyValue: t.Start,
-		}, Filter{
-			PropertyName:  "chocolat.created_at",
-			Operator:      "lt",
-			PropertyValue: t.End,
-		})
+		arel = arel.TimeFrame(t)
 	}
 
 	c := r.C(this.params.CollectionName)
-
 	q := NewQuery(c, arel)
-	result, e := q.Execute()
 
-	pp.Println(result)
+	i := this.params.Interval
 
-	return &AggregateResult{Result: result}, e
-	// if this.params.Interval.IsGiven() {
-	// 	result, err := intervalAggregate(pipeline, this.params)
-	// 	return result, err
-	// }
+	var result interface{}
+	var err error
 
-	// return aggregate(pipeline, this.params)
+	if i.IsGiven() {
+		result, err = q.ExecuteWithInterval(t, i)
+	} else {
+		result, err = q.Execute()
+	}
+
+	return &AggregateResult{Result: result}, err
 }
 
 func (this *Aggregator) CountUnique(target string) (interface{}, error) {
