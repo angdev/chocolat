@@ -1,10 +1,5 @@
 package service
 
-import (
-	"github.com/k0kubun/pp"
-	"labix.org/v2/mgo"
-)
-
 type PipeStage map[string]interface{}
 type Pipe []PipeStage
 
@@ -13,24 +8,26 @@ func NewPipe(stages ...PipeStage) Pipe {
 	return append(pipe, stages...)
 }
 
+func (this Pipe) Join(pipes ...Pipe) Pipe {
+	joined := this
+	for _, pipe := range pipes {
+		joined = append(joined, pipe...)
+	}
+	return joined
+}
+
 type PipelineResult []map[string]interface{}
 
 func (this PipelineResult) CollapseField() PipelineResult {
 	var collapsed PipelineResult
 	for _, result := range this {
-		pp.Println(collapseField(result))
 		collapsed = append(collapsed, collapseField(result))
 	}
 	return collapsed
 }
 
 type Pipeline struct {
-	pipes      []Pipe
-	collection *mgo.Collection
-}
-
-func NewPipeline(c *mgo.Collection) *Pipeline {
-	return &Pipeline{collection: c}
+	pipes []Pipe
 }
 
 func (p *Pipeline) Copy() *Pipeline {
@@ -62,13 +59,4 @@ func (p *Pipeline) Stages() []PipeStage {
 		stages = append(stages, pipe...)
 	}
 	return stages
-}
-
-func (p *Pipeline) Result() (PipelineResult, error) {
-	var result PipelineResult
-	if err := p.collection.Pipe(p.Stages()).All(&result); err != nil {
-		return nil, err
-	} else {
-		return result.CollapseField(), nil
-	}
 }

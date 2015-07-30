@@ -130,19 +130,23 @@ type Filter struct {
 
 type FilterError struct{}
 
-func (f *Filter) QueryOp() repo.Doc {
-	op := repo.Doc{}
+func (f *Filter) QueryOp() (string, interface{}) {
+	var op string
+	var value interface{}
 
 	switch f.Operator {
 	case "contains":
-		op["$regex"] = fmt.Sprintf("/%s/", f.PropertyValue.(string))
+		op = "$regex"
+		value = fmt.Sprintf("/%s/", f.PropertyValue.(string))
 	case "not_contains":
-		op["$regex"] = fmt.Sprintf("/^(%s)/", f.PropertyValue.(string))
+		op = "$regex"
+		value = fmt.Sprintf("/^(%s)/", f.PropertyValue.(string))
 	default:
-		op[fmt.Sprintf("$%s", f.Operator)] = f.PropertyValue
+		op = fmt.Sprintf("$%s", f.Operator)
+		value = f.PropertyValue
 	}
 
-	return op
+	return op, value
 }
 
 func (FilterError) Error() string {
@@ -159,12 +163,12 @@ func (f Filters) Pipe(...repo.Doc) Pipe {
 	match := map[string]interface{}{}
 
 	for _, filter := range f {
-		op := filter.QueryOp()
-		match[filter.PropertyName] = op
+		op, value := filter.QueryOp()
+		deepAssign(match, value, filter.PropertyName, op)
 	}
 
 	return NewPipe(PipeStage{
-		"$match": expandField(match),
+		"$match": match,
 	})
 }
 
