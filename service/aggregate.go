@@ -106,3 +106,33 @@ func countUniquePipeline(c *mgo.Collection, params *QueryParams, target string) 
 
 	return pipeline
 }
+
+func (this *Aggregator) Min(target string) (interface{}, error) {
+	// $group Op = $min
+}
+
+func (this *Aggregator) Max(target string) (interface{}, error) {
+	// $group Op = $max
+}
+
+func (this *Aggregator) Sum(target string) (interface{}, error) {
+	// $group Op = $sum
+}
+
+func (this *Aggregator) Average(target string) (interface{}, error) {
+	// $group Op = $avg
+}
+
+func (this *Aggregator) Percentile(target string, percent int) (interface{}, error) {
+	// 0. Get Count results
+	// 1. For each result, Timeframe, GroupBy, Filter -> to one filter
+	// 2. Match {1} -> Skip Percentile(Count, #percent) -> Limit 1
+}
+
+func (this *Aggregator) Median(target string) (interface{}, error) {
+	// return Percentile(target, 50)
+}
+
+func (this *Aggregator) SelectUnique(target string) (interface{}, error) {
+	// Unique w/ no counting
+}
