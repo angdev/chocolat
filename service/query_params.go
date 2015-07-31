@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/angdev/chocolat/support/repo"
 	"github.com/jinzhu/now"
 	"time"
 )
@@ -53,19 +52,6 @@ func (this *TimeFrame) IsGiven() bool {
 	return !(this.Start.IsZero() && this.End.IsZero())
 }
 
-// Create a mongo aggregation pipeline format
-func (this *TimeFrame) Pipe(...repo.Doc) Pipe {
-	if !this.IsGiven() {
-		return nil
-	}
-
-	return NewPipe(PipeStage{
-		"$match": repo.Doc{
-			"chocolat.created_at": repo.Doc{"$gt": this.Start, "$lt": this.End},
-		},
-	})
-}
-
 type GroupBy []string
 
 type GroupByError struct{}
@@ -87,39 +73,6 @@ func (g *GroupBy) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
-}
-
-func (this GroupBy) Pipe(ops ...repo.Doc) Pipe {
-	group := repo.Doc{}
-
-	if len(this) == 0 {
-		group["_id"] = nil
-	} else {
-		criteria := repo.Doc{}
-		for _, field := range this {
-			criteria[field] = variablize(field)
-		}
-		group["_id"] = expandField(criteria)
-	}
-
-	for _, op := range ops {
-		for k, v := range op {
-			group[k] = v
-		}
-	}
-
-	project := repo.Doc{}
-	for _, field := range this {
-		project[field] = variablize("_id", field)
-	}
-	project["_id"] = false
-	project["result"] = variablize("result")
-
-	return NewPipe(PipeStage{
-		"$group": group,
-	}, PipeStage{
-		"$project": project,
-	})
 }
 
 type Filter struct {
@@ -154,23 +107,6 @@ func (FilterError) Error() string {
 }
 
 type Filters []Filter
-
-func (f Filters) Pipe(...repo.Doc) Pipe {
-	if len(f) == 0 {
-		return nil
-	}
-
-	match := map[string]interface{}{}
-
-	for _, filter := range f {
-		op, value := filter.QueryOp()
-		deepAssign(match, value, filter.PropertyName, op)
-	}
-
-	return NewPipe(PipeStage{
-		"$match": match,
-	})
-}
 
 type Interval string
 
