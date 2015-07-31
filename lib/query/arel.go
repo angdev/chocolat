@@ -29,6 +29,10 @@ func (this *Arel) Pipeline() *Pipeline {
 	return &v.Pipeline
 }
 
+func (this *Arel) GroupByGiven() bool {
+	return len(this.ArelNodes.GroupBy.Group) != 0
+}
+
 func (this *Arel) Select(fields ...string) *Arel {
 	return this
 }

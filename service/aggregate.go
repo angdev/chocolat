@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/angdev/chocolat/lib/query"
 	"github.com/angdev/chocolat/model"
 	"github.com/angdev/chocolat/support/repo"
 )
@@ -51,28 +52,47 @@ func (this *Aggregator) Count() (interface{}, error) {
 	r := repo.NewRepository(this.project.RepoName())
 	defer r.Close()
 
-	arel := NewArel().Where(this.params.Filters...).GroupBy(this.params.GroupBy...).Count()
+	// arel := NewArel().Where(this.params.Filters...).GroupBy(this.params.GroupBy...).Count()
+
+	var conds []*query.Condition
+	for _, f := range this.params.Filters {
+		conds = append(conds, query.NewCondition(f.PropertyName, f.Operator, f.PropertyValue))
+	}
 
 	t := this.params.TimeFrame
 	if t.IsGiven() {
-		arel = arel.TimeFrame(t)
+		conds = append(conds,
+			query.NewCondition("chocolat.created_at", "gt", t.Start),
+			query.NewCondition("chocolat.created_at", "lt", t.End))
 	}
 
-	c := r.C(this.params.CollectionName)
-	q := NewQuery(c, arel)
+	arel := query.NewArel().Where(conds...).GroupBy(this.params.GroupBy...).Count()
+	q := query.New(r.C(this.params.CollectionName), arel)
+
+	p := NewPresenter(q)
 
 	i := this.params.Interval
-
-	var result interface{}
-	var err error
-
 	if i.IsGiven() {
-		result, err = q.ExecuteWithInterval(t, i)
+		return p.PresentInterval(&t, &i)
 	} else {
-		result, err = q.Execute()
+		return p.Present()
 	}
 
-	return &AggregateResult{Result: result}, err
+	// c := r.C(this.params.CollectionName)
+	// q := NewQuery(c, arel)
+
+	// i := this.params.Interval
+
+	// var result interface{}
+	// var err error
+
+	// if i.IsGiven() {
+	// 	result, err = q.ExecuteWithInterval(t, i)
+	// } else {
+	// 	result, err = q.Execute()
+	// }
+
+	// return &AggregateResult{Result: result}, err
 }
 
 func (this *Aggregator) CountUnique(target string) (interface{}, error) {

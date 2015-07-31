@@ -22,11 +22,14 @@ func (this *GroupBy) SetOp(op Operator) *GroupBy {
 func (this *GroupBy) Visit(v *Visitor) {
 	if this.Op != nil {
 		this.Op.Visit(v, this)
-		return
-	}
+	} else {
+		group := make(RawExpr)
+		group["_id"] = this.Group.RawExpr()
 
-	group := make(RawExpr)
-	group["_id"] = this.Group.RawExpr()
+		v.Collect(Stage{
+			"$group": group,
+		})
+	}
 
 	// Need to capsule
 	project := make(RawExpr)
@@ -37,8 +40,6 @@ func (this *GroupBy) Visit(v *Visitor) {
 	project["result"] = variablize("result")
 
 	v.Collect(Stage{
-		"$group": group,
-	}, Stage{
 		"$project": project,
 	})
 }
