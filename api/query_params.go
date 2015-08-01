@@ -1,9 +1,9 @@
-package service
+package api
 
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"github.com/angdev/chocolat/lib/query"
 	"github.com/jinzhu/now"
 	"time"
 )
@@ -14,6 +14,23 @@ type QueryParams struct {
 	GroupBy        GroupBy   `json:"group_by"`
 	Filters        Filters   `json:"filters"`
 	Interval       Interval  `json:"interval"`
+	Extra          *json.RawMessage
+}
+
+func (this *QueryParams) ToQuery() *query.Arel {
+	var conds []*query.Condition
+	for _, f := range this.Filters {
+		conds = append(conds, query.NewCondition(f.PropertyName, f.Operator, f.PropertyValue))
+	}
+
+	t := this.TimeFrame
+	if t.IsGiven() {
+		conds = append(conds,
+			query.NewCondition("chocolat.created_at", "gt", t.Start),
+			query.NewCondition("chocolat.created_at", "lt", t.End))
+	}
+
+	return query.NewArel().Where(conds...).GroupBy(this.GroupBy...)
 }
 
 type TimeFrame struct {
@@ -82,25 +99,6 @@ type Filter struct {
 }
 
 type FilterError struct{}
-
-func (f *Filter) QueryOp() (string, interface{}) {
-	var op string
-	var value interface{}
-
-	switch f.Operator {
-	case "contains":
-		op = "$regex"
-		value = fmt.Sprintf("/%s/", f.PropertyValue.(string))
-	case "not_contains":
-		op = "$regex"
-		value = fmt.Sprintf("/^(%s)/", f.PropertyValue.(string))
-	default:
-		op = fmt.Sprintf("$%s", f.Operator)
-		value = f.PropertyValue
-	}
-
-	return op, value
-}
 
 func (FilterError) Error() string {
 	return "Invalid filter"

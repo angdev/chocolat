@@ -2,29 +2,28 @@ package api
 
 import (
 	"errors"
-	"github.com/angdev/chocolat/service"
 	"github.com/ant0ine/go-json-rest/rest"
 	"net/http"
 )
 
 var QueriesRoutes = Routes(
-	rest.Get("/projects/:project_id/queries/count", RequireReadKey(queryCount)),
-	rest.Post("/projects/:project_id/queries/count", RequireReadKey(queryCount)),
-	rest.Get("/projects/:project_id/queries/count_unique", RequireReadKey(queryUniqueCount)),
-	rest.Post("/projects/:project_id/queries/count_unique", RequireReadKey(queryUniqueCount)),
+	rest.Get("/projects/:project_id/queries/count", RequireReadKey(handleQueryCount)),
+	rest.Post("/projects/:project_id/queries/count", RequireReadKey(handleQueryCount)),
+	rest.Get("/projects/:project_id/queries/count_unique", RequireReadKey(handleQueryUniqueCount)),
+	rest.Post("/projects/:project_id/queries/count_unique", RequireReadKey(handleQueryUniqueCount)),
 )
 
-func queryCount(w rest.ResponseWriter, req *rest.Request) {
+func handleQueryCount(w rest.ResponseWriter, req *rest.Request) {
 	project := CurrentProject(req)
 
-	var params service.CountParams
+	var params QueryParams
 	if err := req.DecodeJsonPayload(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, &params.QueryParams)
+	ensureEventCollection(req, &params)
 
-	result, err := service.Count(project, &params)
+	result, err := count(project, &params)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
@@ -33,17 +32,18 @@ func queryCount(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func queryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
+func handleQueryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
 	project := CurrentProject(req)
 
-	var params service.CountUniqueParams
+	var params QueryParams
 	if err := req.DecodeJsonPayload(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, &params.QueryParams)
+	ensureEventCollection(req, &params)
 
-	result, err := service.CountUnique(project, &params)
+	var target string
+	result, err := countUnique(project, target, &params)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
@@ -52,7 +52,7 @@ func queryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func ensureEventCollection(req *rest.Request, params *service.QueryParams) error {
+func ensureEventCollection(req *rest.Request, params *QueryParams) error {
 	if params.CollectionName != "" {
 		return nil
 	}

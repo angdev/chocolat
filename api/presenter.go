@@ -1,4 +1,4 @@
-package service
+package api
 
 import (
 	"github.com/angdev/chocolat/lib/query"

@@ -1,4 +1,4 @@
-package service
+package api
 
 import (
 	"github.com/angdev/chocolat/model"
@@ -11,7 +11,7 @@ type CreateEventParams struct {
 	Events         map[string][]repo.Doc
 }
 
-func CreateEvent(p *model.Project, params *CreateEventParams) (repo.Doc, error) {
+func createEvent(p *model.Project, params *CreateEventParams) (repo.Doc, error) {
 	r := repo.NewRepository(p.RepoName())
 	defer r.Close()
 
@@ -25,7 +25,7 @@ func CreateEvent(p *model.Project, params *CreateEventParams) (repo.Doc, error) 
 	}
 }
 
-func CreateMultipleEvents(p *model.Project, params *CreateEventParams) (map[string][]repo.Doc, error) {
+func createMultipleEvents(p *model.Project, params *CreateEventParams) (map[string][]repo.Doc, error) {
 	r := repo.NewRepository(p.RepoName())
 	defer r.Close()
 
