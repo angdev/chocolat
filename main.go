@@ -20,6 +20,16 @@ func main() {
 	db := model.DB()
 	db.LogMode(true)
 
+	// db.Create(&model.Project{
+	// 	UUID: "project_id",
+	// })
+
+	// var p model.Project
+	// db.Last(&p)
+	// pp.Println(p.ReadKey(), p.WriteKey(), p.MasterKey())
+
+	// pp.Fatal("?")
+
 	apiServer := rest.NewApi()
 	apiServer.Use(rest.DefaultDevStack...)
 

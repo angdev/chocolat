@@ -5,6 +5,8 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 )
 
+type RawResult map[string]interface{}
+
 func Routes(routes ...*rest.Route) []*rest.Route {
 	return routes
 }

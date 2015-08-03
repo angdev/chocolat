@@ -1,8 +1,6 @@
 package api
 
 import (
-	"github.com/angdev/chocolat/support"
-	"github.com/angdev/chocolat/support/repo"
 	"github.com/ant0ine/go-json-rest/rest"
 	"net/http"
 )
@@ -20,20 +18,17 @@ func handleCreateEvent(w rest.ResponseWriter, req *rest.Request) {
 	project := CurrentProject(req)
 	event := req.PathParam("event_name")
 
-	var data repo.Doc
+	var data CreateSingleEventParams
 	var err error
-	if data, err = eventData(req); err != nil {
+	if err = eventData(req, &data); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	events := map[string][]repo.Doc{}
-	events[event] = []repo.Doc{data}
+	events := make(map[string][]interface{})
+	events[event] = []interface{}{data}
 
-	result, err := createEvent(project, &CreateEventParams{
-		CollectionName: event,
-		Events:         events,
-	})
+	result, err := createEvent(project, event, data)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
@@ -42,21 +37,20 @@ func handleCreateEvent(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func eventData(req *rest.Request) (repo.Doc, error) {
+func eventData(req *rest.Request, out interface{}) error {
 	encoded := req.FormValue("data")
 	if encoded != "" {
-		if doc, err := support.DecodeData(encoded); err != nil {
-			return nil, err
+		if err := decodeData(encoded, &out); err != nil {
+			return err
 		} else {
-			return doc, nil
+			return nil
 		}
 	}
 
-	var payload repo.Doc
-	if err := req.DecodeJsonPayload(&payload); err != nil {
-		return nil, err
+	if err := req.DecodeJsonPayload(&out); err != nil {
+		return err
 	} else {
-		return payload, nil
+		return nil
 	}
 }
 
@@ -64,18 +58,14 @@ func eventData(req *rest.Request) (repo.Doc, error) {
 // Create multiple events with a single request.
 func handleCreateMultiEvents(w rest.ResponseWriter, req *rest.Request) {
 	project := CurrentProject(req)
-	event := req.PathParam("event_name")
-	var events map[string][]repo.Doc
+	var events CreateMultipleEventParams
 
 	if err := req.DecodeJsonPayload(&events); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	result, err := createMultipleEvents(project, &CreateEventParams{
-		CollectionName: event,
-		Events:         events,
-	})
+	result, err := createMultipleEvents(project, events)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)

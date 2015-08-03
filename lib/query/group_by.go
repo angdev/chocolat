@@ -33,10 +33,12 @@ func (this *GroupBy) Visit(v *Visitor) {
 
 	// Need to capsule
 	project := make(RawExpr)
+	groups := make(RawExpr)
 	for _, field := range this.Group {
-		project[field] = variablize("_id", field)
+		groups[field] = variablize("_id", field)
 	}
 	project["_id"] = false
+	project["groups"] = groups
 	project["result"] = variablize("result")
 
 	v.Collect(Stage{

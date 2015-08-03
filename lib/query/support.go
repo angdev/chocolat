@@ -4,15 +4,15 @@ import (
 	"strings"
 )
 
-func collapseField(doc map[string]interface{}) map[string]interface{} {
-	collapsed := map[string]interface{}{}
+func collapseField(doc RawExpr) RawExpr {
+	collapsed := RawExpr{}
 
-	var f func([]string, map[string]interface{})
-	f = func(level []string, cursor map[string]interface{}) {
+	var f func([]string, RawExpr)
+	f = func(level []string, cursor RawExpr) {
 		for k, v := range cursor {
 			switch v.(type) {
-			case map[string]interface{}:
-				f(append(level, k), v.(map[string]interface{}))
+			case RawExpr:
+				f(append(level, k), v.(RawExpr))
 			default:
 				collapsed[strings.Join(append(level, k), ".")] = v
 			}
@@ -24,8 +24,8 @@ func collapseField(doc map[string]interface{}) map[string]interface{} {
 	return collapsed
 }
 
-func expandField(doc map[string]interface{}) map[string]interface{} {
-	expanded := map[string]interface{}{}
+func expandField(doc RawExpr) RawExpr {
+	expanded := RawExpr{}
 	collapsed := collapseField(doc)
 
 	for k, v := range collapsed {
@@ -44,14 +44,14 @@ func variablize(fields ...string) string {
 	}
 }
 
-func deepAssign(d map[string]interface{}, value interface{}, keys ...string) {
+func deepAssign(d RawExpr, value interface{}, keys ...string) {
 	cursor := d
 	midKeys, lastKey := keys[:len(keys)-1], keys[len(keys)-1]
 	for _, key := range midKeys {
 		if _, ok := cursor[key]; !ok {
-			cursor[key] = map[string]interface{}{}
+			cursor[key] = RawExpr{}
 		}
-		cursor = cursor[key].(map[string]interface{})
+		cursor = cursor[key].(RawExpr)
 	}
 	cursor[lastKey] = value
 }

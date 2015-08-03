@@ -6,52 +6,53 @@ import (
 	"time"
 )
 
+type CreateSingleEventParams RawResult
+type CreateMultipleEventParams map[string][]CreateSingleEventParams
+
 type CreateEventParams struct {
 	CollectionName string
-	Events         map[string][]repo.Doc
+	Events         map[string][]interface{}
 }
 
-func createEvent(p *model.Project, params *CreateEventParams) (repo.Doc, error) {
+func createEvent(p *model.Project, collName string, params CreateSingleEventParams) (interface{}, error) {
 	r := repo.NewRepository(p.RepoName())
 	defer r.Close()
 
-	docs := params.Events[params.CollectionName]
-
-	result := insertEvents(r, params.CollectionName, docs...)
+	result := insertEvents(r, collName, params)
 	if result[0]["success"] == true {
-		return repo.Doc{"created": true}, nil
+		return RawResult{"created": true}, nil
 	} else {
-		return repo.Doc{"created": false}, nil
+		return RawResult{"created": false}, nil
 	}
 }
 
-func createMultipleEvents(p *model.Project, params *CreateEventParams) (map[string][]repo.Doc, error) {
+func createMultipleEvents(p *model.Project, params CreateMultipleEventParams) (interface{}, error) {
 	r := repo.NewRepository(p.RepoName())
 	defer r.Close()
 
-	result := map[string][]repo.Doc{}
-	for event, docs := range params.Events {
+	result := make(map[string][]RawResult)
+	for event, docs := range params {
 		result[event] = insertEvents(r, event, docs...)
 	}
 
 	return result, nil
 }
 
-func insertEvents(r *repo.Repository, event string, docs ...repo.Doc) []repo.Doc {
-	result := []repo.Doc{}
+func insertEvents(r *repo.Repository, event string, docs ...CreateSingleEventParams) []RawResult {
+	result := []RawResult{}
 	for _, doc := range docs {
 		appendMetadata(doc)
 		if err := r.Insert(event, &doc); err != nil {
-			result = append(result, repo.Doc{"success": false})
+			result = append(result, RawResult{"success": false})
 		} else {
-			result = append(result, repo.Doc{"success": true})
+			result = append(result, RawResult{"success": true})
 		}
 	}
 
 	return result
 }
 
-func appendMetadata(doc repo.Doc) {
+func appendMetadata(doc CreateSingleEventParams) {
 	metadata := map[string]interface{}{}
 	metadata["created_at"] = time.Now()
 

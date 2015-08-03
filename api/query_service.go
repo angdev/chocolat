@@ -11,6 +11,7 @@ func count(p *model.Project, params *QueryParams) (interface{}, error) {
 	defer r.Close()
 
 	q := query.New(r.C(params.CollectionName), params.ToQuery().Count())
+
 	presenter := NewPresenter(q)
 
 	if params.Interval.IsGiven() {
