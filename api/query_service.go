@@ -22,42 +22,93 @@ func count(p *model.Project, params *QueryParams) (interface{}, error) {
 }
 
 func countUnique(p *model.Project, target string, params *QueryParams) (interface{}, error) {
-	return nil, nil
+	r := repo.NewRepository(p.RepoName())
+	defer r.Close()
+
+	q := query.New(r.C(params.CollectionName), params.ToQuery().CountUnique(target))
+
+	presenter := NewPresenter(q)
+
+	if params.Interval.IsGiven() {
+		return presenter.PresentInterval(&params.TimeFrame, &params.Interval)
+	} else {
+		return presenter.Present()
+	}
 }
 
-func min(target string) (interface{}, error) {
-	// $group Op = $min
-	return nil, nil
+func min(p *model.Project, target string, params *QueryParams) (interface{}, error) {
+	r := repo.NewRepository(p.RepoName())
+	defer r.Close()
+
+	q := query.New(r.C(params.CollectionName), params.ToQuery().Min(target))
+
+	presenter := NewPresenter(q)
+
+	if params.Interval.IsGiven() {
+		return presenter.PresentInterval(&params.TimeFrame, &params.Interval)
+	} else {
+		return presenter.Present()
+	}
 }
 
-func max(target string) (interface{}, error) {
-	// $group Op = $max
-	return nil, nil
+func max(p *model.Project, target string, params *QueryParams) (interface{}, error) {
+	r := repo.NewRepository(p.RepoName())
+	defer r.Close()
+
+	q := query.New(r.C(params.CollectionName), params.ToQuery().Max(target))
+
+	presenter := NewPresenter(q)
+
+	if params.Interval.IsGiven() {
+		return presenter.PresentInterval(&params.TimeFrame, &params.Interval)
+	} else {
+		return presenter.Present()
+	}
 }
 
-func sum(target string) (interface{}, error) {
-	// $group Op = $sum
-	return nil, nil
+func sum(p *model.Project, target string, params *QueryParams) (interface{}, error) {
+	r := repo.NewRepository(p.RepoName())
+	defer r.Close()
+
+	q := query.New(r.C(params.CollectionName), params.ToQuery().Sum(target))
+
+	presenter := NewPresenter(q)
+
+	if params.Interval.IsGiven() {
+		return presenter.PresentInterval(&params.TimeFrame, &params.Interval)
+	} else {
+		return presenter.Present()
+	}
 }
 
-func average(target string) (interface{}, error) {
-	// $group Op = $avg
-	return nil, nil
+func average(p *model.Project, target string, params *QueryParams) (interface{}, error) {
+	r := repo.NewRepository(p.RepoName())
+	defer r.Close()
+
+	q := query.New(r.C(params.CollectionName), params.ToQuery().Average(target))
+
+	presenter := NewPresenter(q)
+
+	if params.Interval.IsGiven() {
+		return presenter.PresentInterval(&params.TimeFrame, &params.Interval)
+	} else {
+		return presenter.Present()
+	}
 }
 
-func percentile(target string, percent int) (interface{}, error) {
+func percentile(p *model.Project, target string, percent int, params *QueryParams) (interface{}, error) {
 	// 0. Get Count results
 	// 1. For each result, Timeframe, GroupBy, Filter -> to one filter
 	// 2. Match {1} -> Skip Percentile(Count, #percent) -> Limit 1
 	return nil, nil
 }
 
-func median(target string) (interface{}, error) {
+func median(p *model.Project, target string, params *QueryParams) (interface{}, error) {
 	// return Percentile(target, 50)
 	return nil, nil
 }
 
-func selectUnique(target string) (interface{}, error) {
+func selectUnique(p *model.Project, target string, params *QueryParams) (interface{}, error) {
 	// Unique w/ no counting
 	return nil, nil
 }

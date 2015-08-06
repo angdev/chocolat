@@ -58,3 +58,27 @@ func (this *Arel) CountUnique(target string) *Arel {
 	this.ArelNodes.GroupBy.SetOp(op)
 	return this
 }
+
+func (this *Arel) Min(target string) *Arel {
+	op := &Min{target: target}
+	this.ArelNodes.GroupBy.SetOp(op)
+	return this
+}
+
+func (this *Arel) Max(target string) *Arel {
+	op := &Max{target: target}
+	this.ArelNodes.GroupBy.SetOp(op)
+	return this
+}
+
+func (this *Arel) Sum(target string) *Arel {
+	op := &Sum{target: target}
+	this.ArelNodes.GroupBy.SetOp(op)
+	return this
+}
+
+func (this *Arel) Average(target string) *Arel {
+	op := &Average{target: target}
+	this.ArelNodes.GroupBy.SetOp(op)
+	return this
+}
