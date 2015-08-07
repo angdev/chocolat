@@ -101,3 +101,19 @@ func (this *Average) Visit(v *Visitor, g *GroupBy) {
 		"$group": group,
 	})
 }
+
+type Collect struct {
+	target string
+}
+
+func (this *Collect) Visit(v *Visitor, g *GroupBy) {
+	group := make(RawExpr)
+	group["_id"] = g.Group.RawExpr()
+	group["result"] = RawExpr{
+		"$push": variablize(this.target),
+	}
+
+	v.Collect(Stage{
+		"$group": group,
+	})
+}

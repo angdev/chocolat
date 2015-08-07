@@ -8,6 +8,7 @@ type ArelNodes struct {
 	Select  *Select
 	Where   *Where
 	GroupBy *GroupBy
+	OrderBy *OrderBy
 }
 
 func NewArel() *Arel {
@@ -16,6 +17,7 @@ func NewArel() *Arel {
 			Select:  NewSelect(),
 			Where:   NewWhere(),
 			GroupBy: NewGroupBy(),
+			OrderBy: NewOrderBy(),
 		},
 	}
 }
@@ -24,6 +26,7 @@ func (this *Arel) Pipeline() *Pipeline {
 	v := NewVisitor(this)
 
 	this.ArelNodes.Where.Visit(v)
+	this.ArelNodes.OrderBy.Visit(v)
 	this.ArelNodes.GroupBy.Visit(v)
 
 	return &v.Pipeline
@@ -44,6 +47,11 @@ func (this *Arel) Where(conds ...*Condition) *Arel {
 
 func (this *Arel) GroupBy(groups ...string) *Arel {
 	this.ArelNodes.GroupBy.AddGroup(groups...)
+	return this
+}
+
+func (this *Arel) OrderBy(orders ...*Order) *Arel {
+	this.ArelNodes.OrderBy.AddOrder(orders...)
 	return this
 }
 
@@ -79,6 +87,12 @@ func (this *Arel) Sum(target string) *Arel {
 
 func (this *Arel) Average(target string) *Arel {
 	op := &Average{target: target}
+	this.ArelNodes.GroupBy.SetOp(op)
+	return this
+}
+
+func (this *Arel) Collect(target string) *Arel {
+	op := &Collect{target: target}
 	this.ArelNodes.GroupBy.SetOp(op)
 	return this
 }

@@ -96,16 +96,29 @@ func average(p *model.Project, target string, params *QueryParams) (interface{},
 	}
 }
 
-func percentile(p *model.Project, target string, percent int, params *QueryParams) (interface{}, error) {
-	// 0. Get Count results
-	// 1. For each result, Timeframe, GroupBy, Filter -> to one filter
-	// 2. Match {1} -> Skip Percentile(Count, #percent) -> Limit 1
-	return nil, nil
+func percentile(p *model.Project, target string, percent float64, params *QueryParams) (interface{}, error) {
+	r := repo.NewRepository(p.RepoName())
+	defer r.Close()
+
+	q := query.New(r.C(params.CollectionName), params.ToQuery().
+		OrderBy(&query.Order{Field: target, Order: query.ASC}).Collect(target))
+	var results []queryGroupResult
+
+	if err := q.Execute(&results); err != nil {
+		return nil, err
+	}
+
+	for i, _ := range results {
+		result := results[i].Result.([]interface{})
+		offset := int(float64(len(result)) * percent / 100)
+		results[i].Result = result[offset]
+	}
+
+	return results, nil
 }
 
 func median(p *model.Project, target string, params *QueryParams) (interface{}, error) {
-	// return Percentile(target, 50)
-	return nil, nil
+	return percentile(p, target, 50, params)
 }
 
 func selectUnique(p *model.Project, target string, params *QueryParams) (interface{}, error) {

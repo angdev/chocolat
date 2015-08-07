@@ -19,6 +19,8 @@ var QueriesRoutes = Routes(
 	rest.Post("/projects/:project_id/queries/sum", RequireReadKey(handleQuerySum)),
 	rest.Get("/projects/:project_id/queries/average", RequireReadKey(handleQueryAverage)),
 	rest.Post("/projects/:project_id/queries/average", RequireReadKey(handleQueryAverage)),
+	rest.Get("/projects/:project_id/queries/percentile", RequireReadKey(handleQueryPercentile)),
+	rest.Post("/projects/:project_id/queries/percentile", RequireReadKey(handleQueryPercentile)),
 )
 
 func ensureEventCollection(req *rest.Request, params *QueryParams) error {
@@ -160,6 +162,30 @@ func handleQueryAverage(w rest.ResponseWriter, req *rest.Request) {
 	ensureEventCollection(req, params.QueryParams)
 
 	result, err := average(project, params.TargetProperty, params.QueryParams)
+
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+	} else {
+		w.WriteJson(result)
+	}
+}
+
+func handleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
+	project := CurrentProject(req)
+
+	var params struct {
+		*QueryParams
+		TargetProperty string  `json:"target_property"`
+		Percent        float64 `json:"percent"`
+	}
+
+	if err := req.DecodeJsonPayload(&params); err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ensureEventCollection(req, params.QueryParams)
+
+	result, err := percentile(project, params.TargetProperty, params.Percent, params.QueryParams)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
