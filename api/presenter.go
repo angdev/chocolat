@@ -4,8 +4,6 @@ import (
 	"github.com/deckarep/golang-set"
 )
 
-type Aggregator func(*QueryParams, interface{}) error
-
 func NewPresenter(a Aggregator, p *QueryParams) *Presenter {
 	return &Presenter{aggregator: a, params: p}
 }
