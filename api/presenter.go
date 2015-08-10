@@ -1,70 +1,43 @@
 package api
 
 import (
-	"encoding/json"
-	"github.com/angdev/chocolat/lib/query"
 	"github.com/deckarep/golang-set"
 )
 
-type queryResult struct {
-	Result interface{} `json:"result"`
-}
+type Aggregator func(*QueryParams, interface{}) error
 
-type queryGroupResult struct {
-	Result interface{}
-	Groups RawResult
-}
-
-func (this *queryGroupResult) MarshalJSON() ([]byte, error) {
-	result := make(RawResult)
-	result["result"] = this.Result
-
-	for k, v := range this.Groups {
-		result[k] = v
-	}
-
-	return json.Marshal(result)
-}
-
-type queryIntervalResult struct {
-	Result    interface{} `json:"value"`
-	TimeFrame TimeFrame   `json:"timeframe"`
-}
-
-func (this *queryIntervalResult) MarshalJSON() ([]byte, error) {
-	result := make(RawResult)
-
-	switch this.Result.(type) {
-	case queryResult:
-		result["value"] = this.Result.(queryResult).Result
-	default:
-		result["value"] = this.Result
-	}
-
-	result["timeframe"] = this.TimeFrame
-	return json.Marshal(result)
-}
-
-func NewPresenter(q *query.Query) *Presenter {
-	return &Presenter{query: q}
+func NewPresenter(a Aggregator, p *QueryParams) *Presenter {
+	return &Presenter{aggregator: a, params: p}
 }
 
 type Presenter struct {
-	query *query.Query
+	aggregator Aggregator
+	params     *QueryParams
 }
 
 func (this *Presenter) Present() (interface{}, error) {
-	if this.query.Arel.GroupByGiven() {
-		var result []queryGroupResult
-		if err := this.query.Execute(&result); err != nil {
+	if this.params.Interval.IsGiven() && this.params.TimeFrame.IsGiven() {
+		return this.presentInterval()
+	} else {
+		return this.present()
+	}
+}
+
+func (this *Presenter) groupByGiven() bool {
+	return len(this.params.GroupBy) != 0
+}
+
+func (this *Presenter) aggregate() (interface{}, error) {
+	if this.groupByGiven() {
+		var result queryGroupResultArray
+		if err := this.aggregator(this.params, &result); err != nil {
 			return nil, err
 		} else {
-			return RawResult{"result": result}, nil
+			return result, nil
 		}
 	} else {
 		var result queryResult
-
-		if err := this.query.Execute(&result); err != nil {
+		if err := this.aggregator(this.params, &result); err != nil {
 			return nil, err
 		} else {
 			return result, nil
@@ -72,72 +45,57 @@ func (this *Presenter) Present() (interface{}, error) {
 	}
 }
 
-func (this *Presenter) PresentInterval(t *TimeFrame, i *Interval) (interface{}, error) {
-	if this.query.Arel.GroupByGiven() {
-		if result, err := this.collectIntervalGroupResult(t, i); err != nil {
-			return nil, err
-		} else {
-			this.ensureGroupField(result)
-			return RawResult{"result": result}, nil
-		}
-	} else {
-		if result, err := this.collectIntervalResult(t, i); err != nil {
-			return nil, err
-		} else {
-			return RawResult{"result": result}, nil
-		}
+func (this *Presenter) present() (interface{}, error) {
+	result, err := this.aggregate()
+	if err != nil {
+		return nil, err
 	}
+
+	switch result.(type) {
+	case queryResult:
+		return result, nil
+	case queryGroupResultArray:
+		return RawResult{"result": result}, nil
+	}
+
+	return nil, nil
 }
 
-func (this *Presenter) collectIntervalResult(t *TimeFrame, i *Interval) ([]queryIntervalResult, error) {
+func (this *Presenter) presentInterval() (interface{}, error) {
+	var (
+		result interface{}
+		err    error
+	)
+
+	if result, err = this.collectIntervalResult(); err != nil {
+		return nil, err
+	}
+
+	if this.groupByGiven() {
+		this.ensureGroupField(result.([]queryIntervalResult))
+	}
+
+	return RawResult{"result": result}, nil
+}
+
+func (this *Presenter) collectIntervalResult() (interface{}, error) {
 	var results []queryIntervalResult
-	var result queryResult
+
+	t := this.params.TimeFrame
+	i := this.params.Interval
 
 	start := t.Start
 	for start.Before(t.End) {
 		end := i.NextTime(start)
-		this.query.Arel.Where(
-			query.NewCondition("chocolat.created_at", "gt", start),
-			query.NewCondition("chocolat.created_at", "lt", end))
+		this.params.TimeFrame.Start = start
+		this.params.TimeFrame.End = end
 
-		if err := this.query.Execute(&result); err != nil && err.Error() != "not found" {
+		if result, err := this.aggregate(); err != nil && err.Error() != "not found" {
 			return nil, err
 		} else {
 			results = append(results, queryIntervalResult{
-				Result: result,
-				TimeFrame: TimeFrame{
-					Start: start,
-					End:   end,
-				},
-			})
-		}
-
-		start = end
-	}
-
-	return results, nil
-}
-
-func (this *Presenter) collectIntervalGroupResult(t *TimeFrame, i *Interval) ([]queryIntervalResult, error) {
-	var results []queryIntervalResult
-	var result []queryGroupResult
-
-	start := t.Start
-	for start.Before(t.End) {
-		end := i.NextTime(start)
-		this.query.Arel.Where(
-			query.NewCondition("chocolat.created_at", "gt", start),
-			query.NewCondition("chocolat.created_at", "lt", end))
-
-		if err := this.query.Execute(&result); err != nil {
-			return nil, err
-		} else {
-			results = append(results, queryIntervalResult{
-				Result: result,
-				TimeFrame: TimeFrame{
-					Start: start,
-					End:   end,
-				},
+				Result:    result,
+				TimeFrame: this.params.TimeFrame,
 			})
 		}
 
@@ -149,18 +107,18 @@ func (this *Presenter) collectIntervalGroupResult(t *TimeFrame, i *Interval) ([]
 
 func (this *Presenter) ensureGroupField(results []queryIntervalResult) {
 	// Support only one group_by field
-	groupName := this.query.Arel.ArelNodes.GroupBy.Group[0]
+	groupName := this.params.GroupBy[0]
 	values := mapset.NewSet()
 	for _, result := range results {
-		values = values.Union(this.collectGroupValues(result.Result.([]queryGroupResult), groupName))
+		values = values.Union(this.collectGroupValues(result.Result.(queryGroupResultArray), groupName))
 	}
 
 	for i, _ := range results {
-		results[i].Result = this.ensureGroupValues(results[i].Result.([]queryGroupResult), groupName, values)
+		results[i].Result = this.ensureGroupValues(results[i].Result.(queryGroupResultArray), groupName, values)
 	}
 }
 
-func (this *Presenter) collectGroupValues(results []queryGroupResult, name string) mapset.Set {
+func (this *Presenter) collectGroupValues(results queryGroupResultArray, name string) mapset.Set {
 	values := mapset.NewSet()
 	for _, result := range results {
 		values.Add(result.Groups[name])
@@ -168,7 +126,7 @@ func (this *Presenter) collectGroupValues(results []queryGroupResult, name strin
 	return values
 }
 
-func (this *Presenter) ensureGroupValues(results []queryGroupResult, groupName string, values mapset.Set) []queryGroupResult {
+func (this *Presenter) ensureGroupValues(results queryGroupResultArray, groupName string, values mapset.Set) queryGroupResultArray {
 	groups := this.collectGroupValues(results, groupName)
 	missingGroups := values.Difference(groups).ToSlice()
 	ensured := results
