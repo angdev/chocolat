@@ -1,0 +1,5 @@
+development:
+  open: localhost
+
+production:
+  open: {{ .MONGOLAB_URI }}

@@ -9,16 +9,10 @@ import (
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
-	"labix.org/v2/mgo"
 	"net/http"
 )
 
 var Chocolat = App{}
-
-type Environment struct {
-	Env  string
-	Port string
-}
 
 type App struct {
 	Env Environment
@@ -91,22 +85,12 @@ func (this *App) initEnv() {
 	}
 }
 
-func (this *App) defaultEnv() Environment {
-	return Environment{
-		Env:  "development",
-		Port: "5000",
-	}
-}
-
 func (this *App) initModel() {
 	db := initDB(this)
 	model.Init(db)
 }
 
 func (this *App) initRepo() {
-	if session, err := mgo.Dial("localhost"); err != nil {
-		log.Fatal(err)
-	} else {
-		repo.Init(session)
-	}
+	r := initRepo(this)
+	repo.Init(r)
 }
