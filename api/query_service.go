@@ -2,8 +2,8 @@ package api
 
 import (
 	"github.com/angdev/chocolat/lib/query"
+	"github.com/angdev/chocolat/lib/repo"
 	"github.com/angdev/chocolat/model"
-	"github.com/angdev/chocolat/support/repo"
 )
 
 func count(p *model.Project, params *QueryParams) (interface{}, error) {

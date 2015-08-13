@@ -4,10 +4,12 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/angdev/chocolat/api"
+	"github.com/angdev/chocolat/lib/repo"
 	"github.com/angdev/chocolat/model"
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
+	"labix.org/v2/mgo"
 	"net/http"
 )
 
@@ -25,6 +27,7 @@ type App struct {
 func (this *App) Init() {
 	this.initEnv()
 	this.initModel()
+	this.initRepo()
 }
 
 func (this *App) Run() {
@@ -98,4 +101,12 @@ func (this *App) defaultEnv() Environment {
 func (this *App) initModel() {
 	db := initDB(this)
 	model.Init(db)
+}
+
+func (this *App) initRepo() {
+	if session, err := mgo.Dial("localhost"); err != nil {
+		log.Fatal(err)
+	} else {
+		repo.Init(session)
+	}
 }
