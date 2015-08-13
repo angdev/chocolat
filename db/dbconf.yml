@@ -4,4 +4,4 @@ development:
 
 production:
   driver: postgres
-  open: $DATABASE_URL
+  open: {{ .DATABASE_URL }}

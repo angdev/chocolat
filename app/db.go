@@ -1,14 +1,17 @@
 package app
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 	"github.com/kardianos/osext"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
+	"text/template"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -47,19 +50,23 @@ func initDB(app *App) *gorm.DB {
 func dbConfEnv(env string) (*dbConf, error) {
 	wd, err := osext.ExecutableFolder()
 	if err != nil {
-		log.Fatal("Cannot get executable directory path!")
+		log.Fatal(err)
 	}
 
 	configPath := filepath.Join(wd, ConfigPath)
-	bytes, err := ioutil.ReadFile(configPath)
+	tmp, err := template.ParseFiles(configPath)
 	if err != nil {
-		log.Fatal("Cannot read database config file! - " + configPath)
+		log.Fatal(err)
+	}
+
+	var bytes bytes.Buffer
+	if err = tmp.Execute(&bytes, envMap()); err != nil {
+		log.Fatal(err)
 	}
 
 	var conf map[string]*dbConf
-	err = yaml.Unmarshal(bytes, &conf)
-	if err != nil {
-		log.Fatal("Cannot unmarshal config file!")
+	if err = yaml.Unmarshal(bytes.Bytes(), &conf); err != nil {
+		log.Fatal(err)
 	}
 
 	if value, ok := conf[env]; ok {
@@ -67,4 +74,16 @@ func dbConfEnv(env string) (*dbConf, error) {
 	} else {
 		return nil, errors.New("Unknown environment")
 	}
+}
+
+func envMap() map[string]string {
+	environ := os.Environ()
+	env := make(map[string]string)
+
+	for _, v := range environ {
+		pair := strings.Split(v, "=")
+		env[pair[0]] = pair[1]
+	}
+
+	return env
 }
