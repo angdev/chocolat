@@ -1,9 +1,15 @@
 package api
 
 import (
+	"errors"
 	"github.com/angdev/chocolat/model"
 	"github.com/ant0ine/go-json-rest/rest"
 	"net/http"
+)
+
+var (
+	AuthKeyError       = errors.New("Auth Key is missing")
+	InvalidApiKeyError = errors.New("Requires a valid api key")
 )
 
 func requireApiKey(h rest.HandlerFunc, scopes ...model.ApiScope) rest.HandlerFunc {
@@ -16,14 +22,14 @@ func requireApiKey(h rest.HandlerFunc, scopes ...model.ApiScope) rest.HandlerFun
 
 		authKey, ok := authKeyValue(req)
 		if !ok {
-			rest.Error(w, "Auth Key is missing", http.StatusBadRequest)
+			rest.Error(w, AuthKeyError.Error(), http.StatusBadRequest)
 			return
 		}
 
 		if boundScope(project, authKey, scopes...) {
 			h(w, req)
 		} else {
-			rest.Error(w, "Requires a valid api key", http.StatusUnauthorized)
+			rest.Error(w, InvalidApiKeyError.Error(), http.StatusUnauthorized)
 		}
 	}
 }

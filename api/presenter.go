@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/deckarep/golang-set"
+	"labix.org/v2/mgo"
 )
 
 func NewPresenter(a Aggregator, p *QueryParams) *Presenter {
@@ -88,7 +89,7 @@ func (this *Presenter) collectIntervalResult() (interface{}, error) {
 		this.params.TimeFrame.Start = start
 		this.params.TimeFrame.End = end
 
-		if result, err := this.aggregate(); err != nil && err.Error() != "not found" {
+		if result, err := this.aggregate(); err != nil && err != mgo.ErrNotFound {
 			return nil, err
 		} else {
 			results = append(results, queryIntervalResult{

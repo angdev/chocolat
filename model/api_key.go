@@ -21,7 +21,7 @@ func (this *ApiKey) TableName() string {
 
 func ApiKeyByValue(value string) *ApiKey {
 	var key ApiKey
-	if DB().First(&key, &ApiKey{Value: value}).RecordNotFound() {
+	if db.First(&key, &ApiKey{Value: value}).RecordNotFound() {
 		return nil
 	} else {
 		return &key

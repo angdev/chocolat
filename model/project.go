@@ -31,7 +31,7 @@ func (this *Project) AfterCreate(tx *gorm.DB) error {
 
 func ProjectByUUID(uuid string) *Project {
 	var project Project
-	if DB().First(&project, &Project{UUID: uuid}).RecordNotFound() {
+	if db.First(&project, &Project{UUID: uuid}).RecordNotFound() {
 		return nil
 	} else {
 		return &project
@@ -39,7 +39,7 @@ func ProjectByUUID(uuid string) *Project {
 }
 
 func (this *Project) apiKeys(out []ApiKey) *gorm.DB {
-	return DB().Model(this).Related(&out)
+	return db.Model(this).Related(&out)
 }
 
 func (this *Project) ReadKey() *ApiKey {
