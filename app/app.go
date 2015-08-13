@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/angdev/chocolat/api"
 	"github.com/angdev/chocolat/model"
@@ -13,7 +14,8 @@ import (
 var Chocolat = App{}
 
 type Environment struct {
-	Env string
+	Env  string
+	Port string
 }
 
 type App struct {
@@ -56,7 +58,10 @@ func (this *App) Run() {
 	}
 
 	apiServer.SetApp(router)
-	log.Fatal(http.ListenAndServe(":5000", apiServer.MakeHandler()))
+
+	log.Info("Start serving, port=", this.Env.Port)
+
+	log.Fatal(http.ListenAndServe(this.Port(), apiServer.MakeHandler()))
 }
 
 func mergeRouteSet(routeSets ...[]*rest.Route) []*rest.Route {
@@ -65,6 +70,10 @@ func mergeRouteSet(routeSets ...[]*rest.Route) []*rest.Route {
 		routes = append(routes, routeSet...)
 	}
 	return routes
+}
+
+func (this *App) Port() string {
+	return fmt.Sprintf(":%s", this.Env.Port)
 }
 
 func (this *App) initEnv() {
@@ -81,7 +90,8 @@ func (this *App) initEnv() {
 
 func (this *App) defaultEnv() Environment {
 	return Environment{
-		Env: "development",
+		Env:  "development",
+		Port: "5000",
 	}
 }
 
