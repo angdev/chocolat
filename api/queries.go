@@ -5,35 +5,24 @@ import (
 	"net/http"
 )
 
-func ensureEventCollection(req *rest.Request, params *QueryParams) error {
-	if params.CollectionName != "" {
-		return nil
-	}
-
-	if v := req.FormValue("event_collection"); v != "" {
-		params.CollectionName = v
-		return nil
-	} else {
-		return ParamsMissingError
-	}
-}
-
 func HandleQueryCount(w rest.ResponseWriter, req *rest.Request) {
 	if err := RequireReadKey(w, req); err != nil {
 		rest.Error(w, err.Error(), err.(StatusError).Code)
 		return
 	}
 
-	project := currentProject(req)
+	var params struct {
+		*QueryParams
+	}
 
-	var params QueryParams
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, &params)
 
-	result, err := count(project, &params)
+	project := currentProject(req)
+	result, err := count(project, params.QueryParams)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
@@ -48,19 +37,18 @@ func HandleQueryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := countUnique(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {
@@ -76,19 +64,18 @@ func HandleQueryMin(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := min(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {
@@ -104,19 +91,18 @@ func HandleQueryMax(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := max(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {
@@ -132,19 +118,18 @@ func HandleQuerySum(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := sum(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {
@@ -160,19 +145,18 @@ func HandleQueryAverage(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := average(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {
@@ -188,20 +172,19 @@ func HandleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string  `json:"target_property"`
 		Percent        float64 `json:"percent"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property", "percent"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := percentile(project, params.TargetProperty, params.Percent, params.QueryParams)
 
 	if err != nil {
@@ -217,20 +200,18 @@ func HandleQueryMedian(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
-		TargetProperty string  `json:"target_property"`
-		Percent        float64 `json:"percent"`
+		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
 
+	project := currentProject(req)
 	result, err := median(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {
@@ -246,24 +227,18 @@ func HandleQuerySelectUnique(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := currentProject(req)
-
 	var params struct {
 		*QueryParams
 		TargetProperty string `json:"target_property"`
 	}
 
-	if err := req.DecodeJsonPayload(&params); err != nil {
+	requires := []string{"event_collection", "target_property", "timeframe"}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ensureEventCollection(req, params.QueryParams)
-	if !params.TimeFrame.IsGiven() {
-		err := ParamsMissingError
-		rest.Error(w, err.Error(), err.Code)
-		return
-	}
 
+	project := currentProject(req)
 	result, err := selectUnique(project, params.TargetProperty, params.QueryParams)
 
 	if err != nil {

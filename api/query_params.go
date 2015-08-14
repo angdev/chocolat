@@ -14,7 +14,6 @@ type QueryParams struct {
 	GroupBy        GroupBy   `json:"group_by"`
 	Filters        Filters   `json:"filters"`
 	Interval       Interval  `json:"interval"`
-	Extra          *json.RawMessage
 }
 
 func (this *QueryParams) ToQuery() *query.Arel {

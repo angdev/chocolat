@@ -9,11 +9,6 @@ import (
 type CreateSingleEventParams RawResult
 type CreateMultipleEventParams map[string][]CreateSingleEventParams
 
-type CreateEventParams struct {
-	CollectionName string
-	Events         map[string][]interface{}
-}
-
 func createEvent(p *model.Project, collName string, params CreateSingleEventParams) (interface{}, error) {
 	r := repo.NewRepository(p.RepoName())
 	defer r.Close()
