@@ -24,7 +24,7 @@ func (this *Where) Visit(v *Visitor) {
 	match := make(RawExpr)
 
 	for _, cond := range this.Conditions {
-		mergo.MapWithOverwrite(&match, cond.RawExpr())
+		mergo.Map(&match, cond.RawExpr())
 	}
 
 	v.Collect(Stage{
