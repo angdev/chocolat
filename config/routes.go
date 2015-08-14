@@ -27,6 +27,8 @@ func init() {
 		rest.Post("/projects/:project_id/queries/average", api.HandleQueryAverage),
 		rest.Get("/projects/:project_id/queries/percentile", api.HandleQueryPercentile),
 		rest.Post("/projects/:project_id/queries/percentile", api.HandleQueryPercentile),
+		rest.Get("/projects/:project_id/queries/median", api.HandleQueryMedian),
+		rest.Post("/projects/:project_id/queries/median", api.HandleQueryMedian),
 		rest.Get("/projects/:project_id/queries/select_unique", api.HandleQuerySelectUnique),
 		rest.Post("/projects/:project_id/queries/select_unique", api.HandleQuerySelectUnique),
 	}

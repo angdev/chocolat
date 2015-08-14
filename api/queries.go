@@ -211,6 +211,35 @@ func HandleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
+func HandleQueryMedian(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
+	project := CurrentProject(req)
+
+	var params struct {
+		*QueryParams
+		TargetProperty string  `json:"target_property"`
+		Percent        float64 `json:"percent"`
+	}
+
+	if err := req.DecodeJsonPayload(&params); err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ensureEventCollection(req, params.QueryParams)
+
+	result, err := median(project, params.TargetProperty, params.QueryParams)
+
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+	} else {
+		w.WriteJson(result)
+	}
+}
+
 func HandleQuerySelectUnique(w rest.ResponseWriter, req *rest.Request) {
 	if err := RequireReadKey(w, req); err != nil {
 		rest.Error(w, err.Error(), err.(StatusError).Code)
