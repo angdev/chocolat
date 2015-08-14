@@ -1,37 +1,26 @@
 package api
 
 import (
-	"errors"
 	"github.com/angdev/chocolat/model"
 	"github.com/ant0ine/go-json-rest/rest"
-	"net/http"
 )
 
-var (
-	AuthKeyError       = errors.New("Auth Key is missing")
-	InvalidApiKeyError = errors.New("Requires a valid api key")
-)
-
-func requireApiKey(h rest.HandlerFunc, scopes ...model.ApiScope) rest.HandlerFunc {
-	return func(w rest.ResponseWriter, req *rest.Request) {
-		project := CurrentProject(req)
-		if project == nil {
-			rest.NotFound(w, req)
-			return
-		}
-
-		authKey, ok := authKeyValue(req)
-		if !ok {
-			rest.Error(w, AuthKeyError.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if boundScope(project, authKey, scopes...) {
-			h(w, req)
-		} else {
-			rest.Error(w, InvalidApiKeyError.Error(), http.StatusUnauthorized)
-		}
+func requireApiKey(w rest.ResponseWriter, req *rest.Request, scopes ...model.ApiScope) error {
+	project := CurrentProject(req)
+	if project == nil {
+		return NotFoundError
 	}
+
+	authKey, ok := authKeyValue(req)
+	if !ok {
+		return AuthKeyError
+	}
+
+	if !boundScope(project, authKey, scopes...) {
+		return InvalidApiKeyError
+	}
+
+	return nil
 }
 
 func boundScope(project *model.Project, authKey string, scopes ...model.ApiScope) bool {
@@ -55,16 +44,16 @@ func boundScope(project *model.Project, authKey string, scopes ...model.ApiScope
 	return ok
 }
 
-func RequireReadKey(h rest.HandlerFunc) rest.HandlerFunc {
-	return requireApiKey(h, model.ApiReadKey, model.ApiMasterKey)
+func RequireReadKey(w rest.ResponseWriter, req *rest.Request) error {
+	return requireApiKey(w, req, model.ApiReadKey, model.ApiMasterKey)
 }
 
-func RequireWriteKey(h rest.HandlerFunc) rest.HandlerFunc {
-	return requireApiKey(h, model.ApiWriteKey, model.ApiMasterKey)
+func RequireWriteKey(w rest.ResponseWriter, req *rest.Request) error {
+	return requireApiKey(w, req, model.ApiWriteKey, model.ApiMasterKey)
 }
 
-func RequireMasterKey(h rest.HandlerFunc) rest.HandlerFunc {
-	return requireApiKey(h, model.ApiMasterKey)
+func RequireMasterKey(w rest.ResponseWriter, req *rest.Request) error {
+	return requireApiKey(w, req, model.ApiMasterKey)
 }
 
 func authKeyValue(req *rest.Request) (string, bool) {

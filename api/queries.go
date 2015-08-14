@@ -6,23 +6,6 @@ import (
 	"net/http"
 )
 
-var QueriesRoutes = Routes(
-	rest.Get("/projects/:project_id/queries/count", RequireReadKey(handleQueryCount)),
-	rest.Post("/projects/:project_id/queries/count", RequireReadKey(handleQueryCount)),
-	rest.Get("/projects/:project_id/queries/count_unique", RequireReadKey(handleQueryUniqueCount)),
-	rest.Post("/projects/:project_id/queries/count_unique", RequireReadKey(handleQueryUniqueCount)),
-	rest.Get("/projects/:project_id/queries/min", RequireReadKey(handleQueryMin)),
-	rest.Post("/projects/:project_id/queries/min", RequireReadKey(handleQueryMin)),
-	rest.Get("/projects/:project_id/queries/max", RequireReadKey(handleQueryMax)),
-	rest.Post("/projects/:project_id/queries/max", RequireReadKey(handleQueryMax)),
-	rest.Get("/projects/:project_id/queries/sum", RequireReadKey(handleQuerySum)),
-	rest.Post("/projects/:project_id/queries/sum", RequireReadKey(handleQuerySum)),
-	rest.Get("/projects/:project_id/queries/average", RequireReadKey(handleQueryAverage)),
-	rest.Post("/projects/:project_id/queries/average", RequireReadKey(handleQueryAverage)),
-	rest.Get("/projects/:project_id/queries/percentile", RequireReadKey(handleQueryPercentile)),
-	rest.Post("/projects/:project_id/queries/percentile", RequireReadKey(handleQueryPercentile)),
-)
-
 func ensureEventCollection(req *rest.Request, params *QueryParams) error {
 	if params.CollectionName != "" {
 		return nil
@@ -36,7 +19,12 @@ func ensureEventCollection(req *rest.Request, params *QueryParams) error {
 	}
 }
 
-func handleQueryCount(w rest.ResponseWriter, req *rest.Request) {
+func HandleQueryCount(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params QueryParams
@@ -55,7 +43,12 @@ func handleQueryCount(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func handleQueryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
+func HandleQueryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params struct {
@@ -78,7 +71,12 @@ func handleQueryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func handleQueryMin(w rest.ResponseWriter, req *rest.Request) {
+func HandleQueryMin(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params struct {
@@ -101,7 +99,12 @@ func handleQueryMin(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func handleQueryMax(w rest.ResponseWriter, req *rest.Request) {
+func HandleQueryMax(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params struct {
@@ -124,7 +127,12 @@ func handleQueryMax(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func handleQuerySum(w rest.ResponseWriter, req *rest.Request) {
+func HandleQuerySum(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params struct {
@@ -147,7 +155,12 @@ func handleQuerySum(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func handleQueryAverage(w rest.ResponseWriter, req *rest.Request) {
+func HandleQueryAverage(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params struct {
@@ -170,7 +183,12 @@ func handleQueryAverage(w rest.ResponseWriter, req *rest.Request) {
 	}
 }
 
-func handleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
+func HandleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 
 	var params struct {

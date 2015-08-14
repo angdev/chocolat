@@ -3,9 +3,9 @@ package app
 import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/angdev/chocolat/api"
-	"github.com/angdev/chocolat/lib/repo"
+	"github.com/angdev/chocolat/config"
 	"github.com/angdev/chocolat/model"
+	"github.com/angdev/chocolat/repo"
 	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -47,9 +47,7 @@ func (this *App) Run() {
 		CallbackNameKey: "jsonp",
 	})
 
-	routes := mergeRouteSet(api.EventsRoutes, api.QueriesRoutes)
-
-	router, err := rest.MakeRouter(routes...)
+	router, err := rest.MakeRouter(config.Routes...)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,14 +57,6 @@ func (this *App) Run() {
 	log.Info("Start serving, port=", this.Env.Port)
 
 	log.Fatal(http.ListenAndServe(this.Port(), apiServer.MakeHandler()))
-}
-
-func mergeRouteSet(routeSets ...[]*rest.Route) []*rest.Route {
-	var routes []*rest.Route
-	for _, routeSet := range routeSets {
-		routes = append(routes, routeSet...)
-	}
-	return routes
 }
 
 func (this *App) Port() string {
@@ -91,6 +81,6 @@ func (this *App) initModel() {
 }
 
 func (this *App) initRepo() {
-	r := initRepo(this)
-	repo.Init(r)
+	session := initRepo(this)
+	repo.Init(session)
 }

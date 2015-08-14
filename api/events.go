@@ -5,16 +5,14 @@ import (
 	"net/http"
 )
 
-// Including routes related with events.
-var EventsRoutes = Routes(
-	rest.Get("/projects/:project_id/events/:event_name", RequireWriteKey(handleCreateEvent)),
-	rest.Post("/projects/:project_id/events/:event_name", RequireWriteKey(handleCreateEvent)),
-	rest.Post("/projects/:project_id/events", RequireWriteKey(handleCreateMultiEvents)),
-)
-
 // Require a write key.
 // Create a event.
-func handleCreateEvent(w rest.ResponseWriter, req *rest.Request) {
+func HandleCreateEvent(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireWriteKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 	event := req.PathParam("event_name")
 
@@ -56,7 +54,12 @@ func eventData(req *rest.Request, out interface{}) error {
 
 // Require a write key.
 // Create multiple events with a single request.
-func handleCreateMultiEvents(w rest.ResponseWriter, req *rest.Request) {
+func HandleCreateMultiEvents(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireWriteKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
 	project := CurrentProject(req)
 	var events CreateMultipleEventParams
 

@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/angdev/chocolat/lib/repo"
 	"github.com/angdev/chocolat/model"
+	"github.com/angdev/chocolat/repo"
 	"time"
 )
 

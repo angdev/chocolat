@@ -2,12 +2,9 @@ package repo
 
 import (
 	"labix.org/v2/mgo"
-	"labix.org/v2/mgo/bson"
 )
 
 var session *mgo.Session
-
-type Doc bson.M
 
 type Repository struct {
 	session  *mgo.Session
