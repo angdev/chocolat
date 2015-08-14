@@ -13,7 +13,7 @@ func HandleCreateEvent(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 	event := req.PathParam("event_name")
 
 	var data CreateSingleEventParams
@@ -60,7 +60,7 @@ func HandleCreateMultiEvents(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 	var events CreateMultipleEventParams
 
 	if err := req.DecodeJsonPayload(&events); err != nil {

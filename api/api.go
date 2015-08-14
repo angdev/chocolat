@@ -11,7 +11,7 @@ func Routes(routes ...*rest.Route) []*rest.Route {
 	return routes
 }
 
-func CurrentProject(req *rest.Request) *model.Project {
+func currentProject(req *rest.Request) *model.Project {
 	uuid := req.PathParam("project_id")
 	return model.ProjectByUUID(uuid)
 }

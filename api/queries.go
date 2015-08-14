@@ -24,7 +24,7 @@ func HandleQueryCount(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params QueryParams
 	if err := req.DecodeJsonPayload(&params); err != nil {
@@ -48,7 +48,7 @@ func HandleQueryUniqueCount(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -76,7 +76,7 @@ func HandleQueryMin(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -104,7 +104,7 @@ func HandleQueryMax(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -132,7 +132,7 @@ func HandleQuerySum(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -160,7 +160,7 @@ func HandleQueryAverage(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -188,7 +188,7 @@ func HandleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -217,7 +217,7 @@ func HandleQueryMedian(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams
@@ -246,7 +246,7 @@ func HandleQuerySelectUnique(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
-	project := CurrentProject(req)
+	project := currentProject(req)
 
 	var params struct {
 		*QueryParams

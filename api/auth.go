@@ -6,7 +6,7 @@ import (
 )
 
 func requireApiKey(w rest.ResponseWriter, req *rest.Request, scopes ...model.ApiScope) error {
-	project := CurrentProject(req)
+	project := currentProject(req)
 	if project == nil {
 		return NotFoundError
 	}
