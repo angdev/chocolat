@@ -17,4 +17,5 @@ var (
 	NotFoundError      = StatusError{Message: "Resource not found", Code: http.StatusNotFound}
 	AuthKeyError       = StatusError{Message: "Auth Key is missing", Code: http.StatusBadRequest}
 	InvalidApiKeyError = StatusError{Message: "Requires a valid api key", Code: http.StatusBadRequest}
+	ParamsMissingError = StatusError{Message: "Required parameters are missing", Code: http.StatusBadRequest}
 )

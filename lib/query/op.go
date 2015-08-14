@@ -117,3 +117,19 @@ func (this *Collect) Visit(v *Visitor, g *GroupBy) {
 		"$group": group,
 	})
 }
+
+type SelectUnique struct {
+	target string
+}
+
+func (this *SelectUnique) Visit(v *Visitor, g *GroupBy) {
+	group := make(RawExpr)
+	group["_id"] = g.Group.RawExpr()
+	group["result"] = RawExpr{
+		"$addToSet": variablize(this.target),
+	}
+
+	v.Collect(Stage{
+		"$group": group,
+	})
+}

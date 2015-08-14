@@ -96,3 +96,9 @@ func (this *Arel) Collect(target string) *Arel {
 	this.ArelNodes.GroupBy.SetOp(op)
 	return this
 }
+
+func (this *Arel) SelectUnique(target string) *Arel {
+	op := &SelectUnique{target: target}
+	this.ArelNodes.GroupBy.SetOp(op)
+	return this
+}

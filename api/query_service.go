@@ -123,6 +123,14 @@ func median(p *model.Project, target string, params *QueryParams) (interface{}, 
 }
 
 func selectUnique(p *model.Project, target string, params *QueryParams) (interface{}, error) {
-	// Unique w/ no counting
-	return nil, nil
+	var aggregator = func(params *QueryParams, out interface{}) error {
+		r := repo.NewRepository(p.RepoName())
+		defer r.Close()
+
+		q := query.New(r.C(params.CollectionName), params.ToQuery().SelectUnique(target))
+		return q.Execute(out)
+	}
+
+	presenter := NewPresenter(aggregator, params)
+	return presenter.Present()
 }
