@@ -8,6 +8,20 @@ import (
 	"text/template"
 )
 
+const (
+	RepoConfigPath = "config/repoconf.yml"
+	DbConfigPath   = "config/dbconf.yml"
+)
+
+type repoConf struct {
+	Open string
+}
+
+type dbConf struct {
+	Driver string
+	Open   string
+}
+
 func parseConfigYaml(path string, out interface{}) error {
 	wd, err := osext.ExecutableFolder()
 	if err != nil {
