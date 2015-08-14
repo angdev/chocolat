@@ -23,19 +23,18 @@ type CountUnique struct {
 }
 
 func (this *CountUnique) Visit(v *Visitor, g *GroupBy) {
-	group := g.Group
-	distinctGroup := &GroupBy{
-		Group: append(group, this.target),
+	distinctGroup := make(RawExpr)
+	distinctGroup["_id"] = Group(append(g.Group, this.target)).RawExpr()
+
+	group := make(RawExpr)
+	group["_id"] = g.Group.RawExpr()
+	group["result"] = RawExpr{
+		"$sum": 1,
 	}
 
-	distinctGroup.Visit(v)
-
-	countGroup := &GroupBy{
-		Group: group,
-		Op:    &Count{},
-	}
-
-	countGroup.Visit(v)
+	v.Collect(Stage{
+		"$group": group,
+	})
 }
 
 type Min struct {
