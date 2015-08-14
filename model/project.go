@@ -72,3 +72,7 @@ func (this *Project) MasterKey() *ApiKey {
 func (this *Project) RepoName() string {
 	return this.UUID
 }
+
+func (this *Project) Delete() {
+	db.Delete(this)
+}

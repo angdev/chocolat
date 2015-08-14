@@ -29,6 +29,10 @@ func NewCli() *cli.App {
 			Name:  "project, p",
 			Usage: "Inspect a project",
 		},
+		cli.StringFlag{
+			Name:  "delete, d",
+			Usage: "Delete a project",
+		},
 	}
 
 	app.Action = func(c *cli.Context) {
@@ -38,6 +42,8 @@ func NewCli() *cli.App {
 			listProject()
 		} else if c.String("project") != "" {
 			inspectProject(c.String("project"))
+		} else if c.String("delete") != "" {
+			deleteProject(c.String("delete"))
 		} else if c.Bool("run") {
 			Chocolat.Run()
 		} else {
@@ -88,4 +94,17 @@ func inspectProject(uuid string) {
 	fmt.Printf("Project Master Key - %s\n", project.MasterKey().Value)
 	fmt.Printf("Project Read Key - %s\n", project.ReadKey().Value)
 	fmt.Printf("Project Write Key - %s\n", project.WriteKey().Value)
+}
+
+func deleteProject(uuid string) {
+	project := model.ProjectByUUID(uuid)
+
+	if project == nil {
+		fmt.Println("No project found")
+		return
+	}
+
+	project.Delete()
+
+	fmt.Printf("Delete a project %s\n", project.UUID)
 }
