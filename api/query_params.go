@@ -5,7 +5,16 @@ import (
 	"errors"
 	"github.com/angdev/chocolat/lib/query"
 	"github.com/jinzhu/now"
+	"strconv"
+	"strings"
 	"time"
+)
+
+var (
+	InvalidTimeFrameError = errors.New("Invalid timeframe")
+	InvalidGroupByError   = errors.New("Invalid group_by")
+	InvalidFilterError    = errors.New("Invalid filter")
+	InvalidIntervalError  = errors.New("Invalid timeframe")
 )
 
 type QueryParams struct {
@@ -38,12 +47,6 @@ type TimeFrame struct {
 	absolute bool
 }
 
-type TimeFrameError struct{}
-
-func (TimeFrameError) Error() string {
-	return "Invalid timeframe"
-}
-
 func (t *TimeFrame) UnmarshalJSON(data []byte) error {
 	var abs struct {
 		Start time.Time `json:"start"`
@@ -60,7 +63,7 @@ func (t *TimeFrame) UnmarshalJSON(data []byte) error {
 	} else if err = json.Unmarshal(data, &rel); err == nil {
 		return errors.New("Relative timeframe is not implemented")
 	} else {
-		return TimeFrameError{}
+		return InvalidTimeFrameError
 	}
 }
 
@@ -69,12 +72,6 @@ func (this *TimeFrame) IsGiven() bool {
 }
 
 type GroupBy []string
-
-type GroupByError struct{}
-
-func (GroupByError) Error() string {
-	return "Invalid group_by"
-}
 
 func (g *GroupBy) UnmarshalJSON(data []byte) error {
 	var multi []string
@@ -85,7 +82,7 @@ func (g *GroupBy) UnmarshalJSON(data []byte) error {
 	} else if err = json.Unmarshal(data, &single); err == nil {
 		*g = []string{single}
 	} else {
-		return GroupByError{}
+		return InvalidGroupByError
 	}
 
 	return nil
@@ -97,25 +94,73 @@ type Filter struct {
 	PropertyValue interface{} `json:"property_value"`
 }
 
-type FilterError struct{}
-
-func (FilterError) Error() string {
-	return "Invalid filter"
-}
-
 type Filters []Filter
 
 type Interval string
 
-func (i *Interval) IsGiven() bool {
-	return (*i) != ""
+func (i Interval) IsGiven() bool {
+	return i != ""
 }
 
-func (i *Interval) NextTime(t time.Time) time.Time {
-	switch *i {
-	case "daily":
-		return now.New(t.AddDate(0, 0, 1)).BeginningOfDay()
+func (i Interval) NextTime(t time.Time) (time.Time, error) {
+	if i.isCustomInterval() {
+		return i.nextCustomTime(t)
 	}
-	// temp
-	return t
+	return i.nextSupportedTime(t)
+}
+
+func (i Interval) isCustomInterval() bool {
+	return len(strings.Split(string(i), "_")) == 3
+}
+
+func (i Interval) nextSupportedTime(t time.Time) (time.Time, error) {
+	switch i {
+	case "minutely":
+		return i.nextTime(t, 1, "minutes")
+	case "hourly":
+		return i.nextTime(t, 1, "hours")
+	case "daily":
+		return i.nextTime(t, 1, "days")
+	case "weekly":
+		return i.nextTime(t, 1, "weeks")
+	case "monthly":
+		return i.nextTime(t, 1, "months")
+	case "yearly":
+		return i.nextTime(t, 1, "years")
+	}
+	return time.Time{}, InvalidIntervalError
+}
+
+func (i Interval) nextCustomTime(t time.Time) (time.Time, error) {
+	params := strings.Split(string(i), "_")
+
+	if params[0] != "every" {
+		return time.Time{}, InvalidIntervalError
+	}
+
+	units := params[2]
+
+	if n, err := strconv.Atoi(params[1]); err != nil {
+		return time.Time{}, err
+	} else {
+		return i.nextTime(t, n, units)
+	}
+}
+
+func (i Interval) nextTime(t time.Time, n int, units string) (time.Time, error) {
+	switch units {
+	case "minutes":
+		return now.New(t.Add(time.Minute * time.Duration(n))).BeginningOfMinute(), nil
+	case "hours":
+		return now.New(t.Add(time.Hour * time.Duration(n))).BeginningOfHour(), nil
+	case "days":
+		return now.New(t.AddDate(0, 0, n)).BeginningOfDay(), nil
+	case "weeks":
+		return now.New(t.AddDate(0, 0, 7*n)).BeginningOfDay(), nil
+	case "months":
+		return now.New(t.AddDate(0, n, 0)).BeginningOfDay(), nil
+	case "years":
+		return now.New(t.AddDate(n, 0, 0)).BeginningOfDay(), nil
+	}
+	return time.Time{}, InvalidIntervalError
 }

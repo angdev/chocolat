@@ -85,7 +85,11 @@ func (this *Presenter) collectIntervalResult() (interface{}, error) {
 
 	start := t.Start
 	for start.Before(t.End) {
-		end := i.NextTime(start)
+		end, err := i.NextTime(start)
+		if err != nil {
+			return nil, err
+		}
+
 		this.params.TimeFrame.Start = start
 		this.params.TimeFrame.End = end
 
