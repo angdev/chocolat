@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/angdev/chocolat/config"
 	"github.com/angdev/chocolat/model"
 	"github.com/codegangsta/cli"
 	"github.com/satori/go.uuid"
@@ -23,7 +24,7 @@ func NewCli() *cli.App {
 		},
 		cli.BoolFlag{
 			Name:  "list, l",
-			Usage: "Listing projects",
+			Usage: "List projects",
 		},
 		cli.StringFlag{
 			Name:  "project, p",
@@ -32,6 +33,10 @@ func NewCli() *cli.App {
 		cli.StringFlag{
 			Name:  "delete, d",
 			Usage: "Delete a project",
+		},
+		cli.BoolFlag{
+			Name:  "routes",
+			Usage: "List routes",
 		},
 	}
 
@@ -44,6 +49,8 @@ func NewCli() *cli.App {
 			inspectProject(c.String("project"))
 		} else if c.String("delete") != "" {
 			deleteProject(c.String("delete"))
+		} else if c.Bool("routes") {
+			listRoutes()
 		} else if c.Bool("run") {
 			Chocolat.Run()
 		} else {
@@ -107,4 +114,12 @@ func deleteProject(uuid string) {
 	project.Delete()
 
 	fmt.Printf("Delete a project %s\n", project.UUID)
+}
+
+func listRoutes() {
+	routes := config.Routes
+	fmt.Printf("%6s\t%s\n", "Method", "Path")
+	for _, route := range routes {
+		fmt.Printf("%6s\t%s\n", route.HttpMethod, route.PathExp)
+	}
 }
