@@ -35,8 +35,6 @@ func (this *App) Init() {
 }
 
 func (this *App) Run() {
-	this.Init()
-
 	apiServer := rest.NewApi()
 	apiServer.Use(rest.DefaultDevStack...)
 
@@ -93,7 +91,7 @@ func (this *App) initModel() {
 	}
 
 	conf := configs[this.Env.Env]
-	log.Printf("Database initializing (%s)\n", conf)
+	log.Debugf("Database initializing (%s)\n", conf)
 
 	if opened, err := gorm.Open(conf.Driver, conf.Open); err != nil {
 		log.Fatal(err.Error())
@@ -109,7 +107,7 @@ func (this *App) initRepo() {
 	}
 
 	conf := configs[this.Env.Env]
-	log.Infof("Repository initializing (%s)\n", conf)
+	log.Debugf("Repository initializing (%s)\n", conf)
 
 	if session, err := mgo.Dial(conf.Open); err != nil {
 		log.Fatal(err)
