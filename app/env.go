@@ -22,7 +22,7 @@ func envMap() map[string]string {
 	env := make(map[string]string)
 
 	for _, v := range environ {
-		pair := strings.Split(v, "=")
+		pair := strings.SplitN(v, "=", 2)
 		env[pair[0]] = pair[1]
 	}
 
