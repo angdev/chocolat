@@ -1,0 +1,18 @@
+web:
+  build: .
+  command: bash -c "chocolat -r"
+  ports:
+    - "5000:5000"
+  links:
+    - mongo
+    - postgres
+  environment:
+    CHOCOLAT_ENV: production
+    CHOCOLAT_PORT: 5000
+    DATABASE_DRIVER: postgres
+    DATABASE_URL: postgresql://postgres:mysecretpassword@postgres?sslmode=disable
+    REPO_URL: mongo
+mongo:
+  image: mongo:latest
+postgres:
+  image: postgres:latest

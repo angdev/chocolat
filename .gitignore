@@ -2,7 +2,8 @@ chocolat
 gin-bin
 .env
 db/development.sqlite3
-
 .DS_Store
 
 /bin/
+/Godeps/_workspace/
+/Godeps/Readme
