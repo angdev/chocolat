@@ -2,8 +2,8 @@ package app
 
 import (
 	"bytes"
-	"github.com/kardianos/osext"
 	"gopkg.in/yaml.v2"
+	"os"
 	"path/filepath"
 	"text/template"
 )
@@ -23,7 +23,7 @@ type dbConf struct {
 }
 
 func parseConfigYaml(path string, out interface{}) error {
-	wd, err := osext.ExecutableFolder()
+	wd, err := os.Getwd()
 	if err != nil {
 		return err
 	}

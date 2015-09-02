@@ -75,7 +75,7 @@ func (this *App) Port() string {
 func (this *App) initEnv() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Print(err.Error())
+		log.Debug(err.Error())
 	}
 
 	this.Env = this.defaultEnv()

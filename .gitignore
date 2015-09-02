@@ -4,3 +4,5 @@ gin-bin
 db/development.sqlite3
 
 .DS_Store
+
+/bin/
