@@ -2,7 +2,7 @@ web:
   build: .
   command: bash -c "chocolat -r"
   ports:
-    - "5000:5000"
+    - "5000"
   links:
     - mongo
     - postgres
@@ -16,3 +16,10 @@ mongo:
   image: mongo:latest
 postgres:
   image: postgres:latest
+haproxy:
+  image: tutum/haproxy:latest
+  ports:
+    - "80:80"
+    - "443:443"
+  links:
+    - web
