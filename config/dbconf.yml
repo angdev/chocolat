@@ -3,5 +3,5 @@ development:
   open: ./db/development.sqlite3
 
 production:
-  driver: postgres
+  driver: {{ .DATABASE_DRIVER }}
   open: {{ .DATABASE_URL }}

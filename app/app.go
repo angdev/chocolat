@@ -35,6 +35,8 @@ func (this *App) Init() {
 }
 
 func (this *App) Run() {
+	this.Init()
+
 	apiServer := rest.NewApi()
 	apiServer.Use(rest.DefaultDevStack...)
 

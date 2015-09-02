@@ -10,6 +10,7 @@ var (
 
 func Init(x *gorm.DB) {
 	db = x
+	db.AutoMigrate(&Project{}, &ApiKey{})
 }
 
 func DB() *gorm.DB {

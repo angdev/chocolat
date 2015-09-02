@@ -5,10 +5,6 @@ import (
 	"os"
 )
 
-func init() {
-	app.Chocolat.Init()
-}
-
 func main() {
 	cli := app.NewCli()
 	cli.Run(os.Args)

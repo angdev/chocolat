@@ -2,4 +2,4 @@ development:
   open: localhost
 
 production:
-  open: {{ .MONGOLAB_URI }}
+  open: {{ .REPO_URL }}
