@@ -13,7 +13,7 @@ Chocolat is a Keen.io-compatible API server for Collecting Event Data, and Analy
 
 Chocolat is in active development.
 
-Currently, it just works at local development environment. It uses MongoDB as event data store, and aggregation framework. So far, I've concentrated on API specification, so chocolat just like skeleton. From now, Data collecting and Aggregation feature should aim high performance, and scalability.
+Currently, it just works at local development environment. It uses MongoDB as event data store, and aggregation framework. So far, I've concentrated on API specification, so chocolat just likes skeleton. From now, Data collecting and Aggregation feature should aim high performance, and scalability.
 
 
 ## Getting Started
@@ -25,7 +25,9 @@ Currently, it just works at local development environment. It uses MongoDB as ev
 * Sqlite3 (development)
 * Mysql, Postgres (production)
 
-### How to run
+### Quick Run
+
+Before running chocolat, make sure that mongo is running (localhost). Check out `config/dbconf.yml`, `config/repoconf.yml`.
 
 Clone this repository:
 
@@ -33,19 +35,55 @@ Clone this repository:
 
 Install go package dependencies:
 
-    go get . && go get bitbucket.org/liamstask/goose/cmd/goose
+    go get .
 
-Initialize a database:
+or if you use godep,
 
-    goose up
+    godep restore
 
 Build and Run:
 
     go build && ./chocolat -r
 
-Before you run chocolat, check out `config/dbconf.yml`, `config/repoconf.yml`.
+If you want to install:
 
-### Using with Keen.io SDK
+    go install
+
+but chocolat should be executed at chocolat directory, because of configuration files.
+
+## Configuration
+
+Database (Mysql, Postgres, ...) configuration is at `config/dbdonf.yml`. Repository (MongoDB, for event collections) configuration is at `config/repoconf.yml`. You can set config values directly, or using environment variable. (YAML files are preprocessed by [golang template package](http://golang.org/pkg/text/template/))
+
+### Environment Variables
+
+`CHOCOLAT_PORT=3000`, `CHOCOLAT_ENV=development`, `REPO_URL`, `DATABASE_DRIVER`, `DATABASE_URL` are configurable. [web.environment @ docker-compose.yml](https://github.com/angdev/chocolat/blob/develop/docker-compose.yml#L9) will be a help to you.
+
+## Simple CLI Usage
+
+### Create a project
+
+    ./chocolat -c
+
+### List projects
+
+    ./chocolat -l
+
+### Show API Keys
+
+    ./chocolat -p {{.projectID}}
+
+### Run Server
+
+    ./chocolat -r
+
+### Print chocolat help (All commands usage)
+
+    ./chocolat -h
+
+## Play with Keen Open Source
+
+### Keen.io SDK
 
 Create a new project:
 
@@ -53,7 +91,7 @@ Create a new project:
 
 Then chocolat prints `PROJECT_ID`, `MASTER_KEY`, `READ_KEY`, `WRITE_KEY`.
 
-And you can use chocolat with keen.io sdk like below (JS SDK example):
+And you can use chocolat with keen.io sdk like below (Javascript client example):
 
 ```javascript
 <script src="//cdn.jsdelivr.net/keen.js/3.2.5/keen.min.js" type="text/javascript"></script>
@@ -67,6 +105,14 @@ And you can use chocolat with keen.io sdk like below (JS SDK example):
   });
 </script>
 ```
+
+If want to use with rails, then just use [Ruby Client](https://github.com/keenlabs/keen-gem).
+
+### [Data Explorer](https://github.com/keen/explorer)
+
+Follow instructions: [Explorer Quick Setup](https://github.com/keen/explorer#tldr)
+
+and then just add chocolat project id, api keys!
 
 ## Roadmap
 

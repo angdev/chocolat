@@ -11,7 +11,7 @@ import (
 func NewCli() *cli.App {
 	app := cli.NewApp()
 	app.Name = "chocolat"
-	app.Usage = "Yet Another Data Aggregation Server"
+	app.Usage = "Self-Hosted Event Analytics Service"
 	app.Version = "0.0.1"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
