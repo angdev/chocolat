@@ -4,6 +4,12 @@ import (
 	"encoding/json"
 )
 
+type inspectResult struct {
+	Name       string      `json:"name"`
+	Properties interface{} `json:"properties"`
+	Url        string      `json:"url"`
+}
+
 type queryResult struct {
 	Result interface{} `json:"result"`
 }

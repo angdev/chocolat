@@ -14,9 +14,10 @@ var (
 func init() {
 	r.Namespace("/3.0", func(r *routes.Builder) {
 		r.Namespace("/projects/:project_id", func(r *routes.Builder) {
-			r.Get("/events/:event_name", api.HandleCreateEvent)
+			r.Get("/events/:event_name", api.HandleInspectAndCreateEvent)
 			r.Post("/events/:event_name", api.HandleCreateEvent)
-			r.Get("/events", api.HandleCreateMultiEvents)
+			r.Get("/events", api.HandleInspectAllCollections)
+			r.Post("/events", api.HandleCreateMultiEvents)
 		})
 
 		r.Namespace("/projects/:project_id/queries", func(r *routes.Builder) {

@@ -45,7 +45,7 @@ func (this *Min) Visit(v *Visitor, g *GroupBy) {
 	group := make(RawExpr)
 	group["_id"] = g.Group.RawExpr()
 	group["result"] = RawExpr{
-		"$min": variablize(this.target),
+		"$min": Variablize(this.target),
 	}
 
 	v.Collect(Stage{
@@ -61,7 +61,7 @@ func (this *Max) Visit(v *Visitor, g *GroupBy) {
 	group := make(RawExpr)
 	group["_id"] = g.Group.RawExpr()
 	group["result"] = RawExpr{
-		"$max": variablize(this.target),
+		"$max": Variablize(this.target),
 	}
 
 	v.Collect(Stage{
@@ -77,7 +77,7 @@ func (this *Sum) Visit(v *Visitor, g *GroupBy) {
 	group := make(RawExpr)
 	group["_id"] = g.Group.RawExpr()
 	group["result"] = RawExpr{
-		"$sum": variablize(this.target),
+		"$sum": Variablize(this.target),
 	}
 
 	v.Collect(Stage{
@@ -93,7 +93,7 @@ func (this *Average) Visit(v *Visitor, g *GroupBy) {
 	group := make(RawExpr)
 	group["_id"] = g.Group.RawExpr()
 	group["result"] = RawExpr{
-		"$avg": variablize(this.target),
+		"$avg": Variablize(this.target),
 	}
 
 	v.Collect(Stage{
@@ -109,7 +109,7 @@ func (this *Collect) Visit(v *Visitor, g *GroupBy) {
 	group := make(RawExpr)
 	group["_id"] = g.Group.RawExpr()
 	group["result"] = RawExpr{
-		"$push": variablize(this.target),
+		"$push": Variablize(this.target),
 	}
 
 	v.Collect(Stage{
@@ -125,7 +125,7 @@ func (this *SelectUnique) Visit(v *Visitor, g *GroupBy) {
 	group := make(RawExpr)
 	group["_id"] = g.Group.RawExpr()
 	group["result"] = RawExpr{
-		"$addToSet": variablize(this.target),
+		"$addToSet": Variablize(this.target),
 	}
 
 	v.Collect(Stage{

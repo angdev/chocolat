@@ -35,11 +35,11 @@ func (this *GroupBy) Visit(v *Visitor) {
 	project := make(RawExpr)
 	groups := make(RawExpr)
 	for _, field := range this.Group {
-		groups[field] = variablize("_id", field)
+		groups[field] = Variablize("_id", field)
 	}
 	project["_id"] = false
 	project["groups"] = groups
-	project["result"] = variablize("result")
+	project["result"] = Variablize("result")
 
 	v.Collect(Stage{
 		"$project": project,
@@ -55,8 +55,8 @@ func (this Group) RawExpr() RawExpr {
 
 	expr := make(RawExpr)
 	for _, field := range this {
-		expr[field] = variablize(field)
+		expr[field] = Variablize(field)
 	}
 
-	return expandField(expr)
+	return ExpandField(expr)
 }

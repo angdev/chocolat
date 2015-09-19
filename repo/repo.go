@@ -28,6 +28,10 @@ func (this *Repository) C(name string) *mgo.Collection {
 	return this.database.C(name)
 }
 
+func (this *Repository) CollectionNames() ([]string, error) {
+	return this.database.CollectionNames()
+}
+
 func (this *Repository) Insert(name string, docs ...interface{}) error {
 	return this.C(name).Insert(docs...)
 }

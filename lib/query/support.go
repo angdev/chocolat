@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func collapseField(doc RawExpr) RawExpr {
+func CollapseField(doc RawExpr) RawExpr {
 	collapsed := RawExpr{}
 
 	var f func([]string, RawExpr)
@@ -24,19 +24,19 @@ func collapseField(doc RawExpr) RawExpr {
 	return collapsed
 }
 
-func expandField(doc RawExpr) RawExpr {
+func ExpandField(doc RawExpr) RawExpr {
 	expanded := RawExpr{}
-	collapsed := collapseField(doc)
+	collapsed := CollapseField(doc)
 
 	for k, v := range collapsed {
 		keys := strings.Split(k, ".")
-		deepAssign(expanded, v, keys...)
+		DeepAssign(expanded, v, keys...)
 	}
 
 	return expanded
 }
 
-func variablize(fields ...string) string {
+func Variablize(fields ...string) string {
 	if len(fields) == 0 {
 		return ""
 	} else {
@@ -44,7 +44,7 @@ func variablize(fields ...string) string {
 	}
 }
 
-func deepAssign(d RawExpr, value interface{}, keys ...string) {
+func DeepAssign(d RawExpr, value interface{}, keys ...string) {
 	cursor := d
 	midKeys, lastKey := keys[:len(keys)-1], keys[len(keys)-1]
 	for _, key := range midKeys {
