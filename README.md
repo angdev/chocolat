@@ -9,13 +9,6 @@ Chocolat is a Keen.io-compatible API server for Collecting Event Data, and Analy
 
 [Keen.io](https://keen.io/) is awesome, and developer-friendly service. SDK is well-documented, and [a lot of open sources](https://github.com/keen) are provided. By building keen.io-compatible API server, we can use plenty of resources. If you need robust support (stability, scalability, etc), then use Keen.io.
 
-### Status
-
-Chocolat is in active development.
-
-Currently, it just works at local development environment. It uses MongoDB as event data store, and aggregation framework. So far, I've concentrated on API specification, so chocolat just likes skeleton. From now, Data collecting and Aggregation feature should aim high performance, and scalability.
-
-
 ## Getting Started
 
 ### Prerequisites
@@ -123,6 +116,12 @@ Build chocolat image:
 You can test chocolat by using docker compose:
 
     docker-compose up
+
+## Status
+
+Chocolat is in active development.
+
+Currently, it just works at local development environment. It uses MongoDB as event data store, and aggregation framework. So far, I've concentrated on API specification, so chocolat just likes skeleton. From now, Data collecting and Aggregation feature should aim high performance, and scalability.
 
 ## Roadmap
 
