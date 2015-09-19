@@ -9,6 +9,14 @@ Chocolat is a Keen.io-compatible API server for Collecting Event Data, and Analy
 
 [Keen.io](https://keen.io/) is awesome, and developer-friendly service. SDK is well-documented, and [a lot of open sources](https://github.com/keen) are provided. By building keen.io-compatible API server, we can use plenty of resources. If you need robust support (stability, scalability, etc), then use Keen.io.
 
+## Demo
+
+[Demo page](http://chocolat-demo.angdev.io/explorer)
+
+![demo](http://i.imgur.com/rD4VyBo.png)
+
+This demo includes [keen-js](https://github.com/keen/keen-js), [Data Explorer](https://github.com/keen/explorer). Try to use keen.js client, and explore metrics below.
+
 ## Getting Started
 
 ### Prerequisites
@@ -129,6 +137,10 @@ Chocolat will be multi-components service. Even if chocolat is just api server n
 
 ### Backlog
 
+* Project API
+* Extraction API
+* Multi-Analysis API
+* Funnel API
 * Testing (Unit test, Integration test)
 * Mass event collecting
 * Fast event aggregation
