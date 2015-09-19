@@ -178,7 +178,7 @@ func HandleQueryPercentile(w rest.ResponseWriter, req *rest.Request) {
 		Percent        float64 `json:"percent"`
 	}
 
-	requires := []string{"event_collection", "target_property", "percent"}
+	requires := []string{"event_collection", "target_property", "percentile"}
 	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
 		return
