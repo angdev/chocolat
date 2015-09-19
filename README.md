@@ -114,6 +114,16 @@ Follow instructions: [Explorer Quick Setup](https://github.com/keen/explorer#tld
 
 and then just add chocolat project id, api keys!
 
+## Docker (Experimental)
+
+Build chocolat image:
+
+    docker build -t chocolat .
+
+You can test chocolat by using docker compose:
+
+    docker-compose up
+
 ## Roadmap
 
 Chocolat will be multi-components service. Even if chocolat is just api server now, but a lot of components (event aggregation service, message queue, ...) will be built.
