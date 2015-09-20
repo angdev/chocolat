@@ -134,3 +134,25 @@ func selectUnique(p *model.Project, target string, params *QueryParams) (interfa
 	presenter := NewPresenter(aggregator, params)
 	return presenter.Present()
 }
+
+func extract(p *model.Project, email string, latest interface{}, propertyNames string, params *QueryParams) (interface{}, error) {
+	properties := []string{}
+	if propertyNames != "" {
+		if err := decodeUrlEncodedJSON(propertyNames, &properties); err != nil {
+			return nil, err
+		}
+	} else {
+		properties = append(properties, "*")
+	}
+
+	var aggregator = func(params *QueryParams, out interface{}) error {
+		r := repo.NewRepository(p.RepoName())
+		defer r.Close()
+
+		q := query.New(r.C(params.CollectionName), params.ToQuery().Select(properties...))
+		return q.Execute(out)
+	}
+
+	presenter := NewPresenter(aggregator, params)
+	return presenter.Present()
+}

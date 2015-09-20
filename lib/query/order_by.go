@@ -26,7 +26,7 @@ func (this *OrderBy) AddOrder(orders ...*Order) *OrderBy {
 	return this
 }
 
-func (this *OrderBy) Visit(v *Visitor) {
+func (this *OrderBy) Visit(v *Visitor, arel *Arel) {
 	if len(this.orders) == 0 {
 		return
 	}

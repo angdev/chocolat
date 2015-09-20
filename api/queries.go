@@ -247,3 +247,34 @@ func HandleQuerySelectUnique(w rest.ResponseWriter, req *rest.Request) {
 		w.WriteJson(result)
 	}
 }
+
+func HandleQueryExtraction(w rest.ResponseWriter, req *rest.Request) {
+	if err := RequireReadKey(w, req); err != nil {
+		rest.Error(w, err.Error(), err.(StatusError).Code)
+		return
+	}
+
+	// Latest = int|string
+	var params struct {
+		*QueryParams
+		Email         string      `json:"email"`
+		Latest        interface{} `json:"latest"`
+		PropertyNames string      `json:"string"`
+	}
+
+	// Explorer is not using timeframe
+	requires := []string{"event_collection" /* "timeframe" */}
+	if err := NewParams(req).Require(requires...).Parse(&params); err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	project := currentProject(req)
+	result, err := extract(project, params.Email, params.Latest, params.PropertyNames, params.QueryParams)
+
+	if err != nil {
+		rest.Error(w, err.Error(), http.StatusBadRequest)
+	} else {
+		w.WriteJson(result)
+	}
+}

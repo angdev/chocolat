@@ -4,6 +4,41 @@ type Operator interface {
 	Visit(*Visitor, *GroupBy)
 }
 
+type NoOp struct {
+	Fields []string
+}
+
+func (this *NoOp) Visit(v *Visitor, g *GroupBy) {
+	// All Fields?
+	selectAll := false
+	fields := make(map[string]string)
+
+	for _, field := range this.Fields {
+		if field == "*" {
+			selectAll = true
+			break
+		}
+		fields[field] = Variablize(field)
+	}
+
+	group := make(RawExpr)
+	group["_id"] = g.Group.RawExpr()
+
+	if selectAll {
+		group["result"] = RawExpr{
+			"$push": "$$ROOT",
+		}
+	} else {
+		group["result"] = RawExpr{
+			"$push": fields,
+		}
+	}
+
+	v.Collect(Stage{
+		"$group": group,
+	})
+}
+
 type Count struct{}
 
 func (this *Count) Visit(v *Visitor, g *GroupBy) {

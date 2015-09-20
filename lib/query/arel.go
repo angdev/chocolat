@@ -25,9 +25,10 @@ func NewArel() *Arel {
 func (this *Arel) Pipeline() *Pipeline {
 	v := NewVisitor(this)
 
-	this.ArelNodes.Where.Visit(v)
-	this.ArelNodes.OrderBy.Visit(v)
-	this.ArelNodes.GroupBy.Visit(v)
+	this.ArelNodes.Select.Visit(v, this)
+	this.ArelNodes.Where.Visit(v, this)
+	this.ArelNodes.OrderBy.Visit(v, this)
+	this.ArelNodes.GroupBy.Visit(v, this)
 
 	return &v.Pipeline
 }
@@ -37,6 +38,7 @@ func (this *Arel) GroupByGiven() bool {
 }
 
 func (this *Arel) Select(fields ...string) *Arel {
+	this.ArelNodes.Select.AddField(fields...)
 	return this
 }
 

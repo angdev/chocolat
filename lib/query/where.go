@@ -20,7 +20,7 @@ func (this *Where) Condition(conds ...*Condition) *Where {
 	return this
 }
 
-func (this *Where) Visit(v *Visitor) {
+func (this *Where) Visit(v *Visitor, arel *Arel) {
 	match := make(RawExpr)
 
 	for _, cond := range this.Conditions {

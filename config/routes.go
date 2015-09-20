@@ -39,6 +39,8 @@ func init() {
 			r.Post("/median", api.HandleQueryMedian)
 			r.Get("/select_unique", api.HandleQuerySelectUnique)
 			r.Post("/select_unique", api.HandleQuerySelectUnique)
+			r.Get("/extraction", api.HandleQueryExtraction)
+			r.Post("/extraction", api.HandleQueryExtraction)
 		})
 	})
 

@@ -19,7 +19,7 @@ func (this *GroupBy) SetOp(op Operator) *GroupBy {
 	return this
 }
 
-func (this *GroupBy) Visit(v *Visitor) {
+func (this *GroupBy) Visit(v *Visitor, arel *Arel) {
 	if this.Op != nil {
 		this.Op.Visit(v, this)
 	} else {
