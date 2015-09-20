@@ -138,7 +138,6 @@ Chocolat will be multi-components service. Even if chocolat is just api server n
 ### Backlog
 
 * Project API
-* Extraction API
 * Multi-Analysis API
 * Funnel API
 * Testing (Unit test, Integration test)
