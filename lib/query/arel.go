@@ -9,6 +9,7 @@ type ArelNodes struct {
 	Where   *Where
 	GroupBy *GroupBy
 	OrderBy *OrderBy
+	Limit   *Limit
 }
 
 func NewArel() *Arel {
@@ -18,6 +19,7 @@ func NewArel() *Arel {
 			Where:   NewWhere(),
 			GroupBy: NewGroupBy(),
 			OrderBy: NewOrderBy(),
+			Limit:   NewLimit(),
 		},
 	}
 }
@@ -28,6 +30,7 @@ func (this *Arel) Pipeline() *Pipeline {
 	this.ArelNodes.Select.Visit(v, this)
 	this.ArelNodes.Where.Visit(v, this)
 	this.ArelNodes.OrderBy.Visit(v, this)
+	this.ArelNodes.Limit.Visit(v, this)
 	this.ArelNodes.GroupBy.Visit(v, this)
 
 	return &v.Pipeline
@@ -54,6 +57,11 @@ func (this *Arel) GroupBy(groups ...string) *Arel {
 
 func (this *Arel) OrderBy(orders ...*Order) *Arel {
 	this.ArelNodes.OrderBy.AddOrder(orders...)
+	return this
+}
+
+func (this *Arel) Limit(n int) *Arel {
+	this.ArelNodes.Limit.N = n
 	return this
 }
 

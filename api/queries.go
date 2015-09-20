@@ -257,9 +257,9 @@ func HandleQueryExtraction(w rest.ResponseWriter, req *rest.Request) {
 	// Latest = int|string
 	var params struct {
 		*QueryParams
-		Email         string      `json:"email"`
-		Latest        interface{} `json:"latest"`
-		PropertyNames string      `json:"string"`
+		Email         string    `json:"email"`
+		Latest        StringInt `json:"latest"`
+		PropertyNames string    `json:"string"`
 	}
 
 	// Explorer is not using timeframe
@@ -269,8 +269,18 @@ func HandleQueryExtraction(w rest.ResponseWriter, req *rest.Request) {
 		return
 	}
 
+	properties := []string{}
+	if params.PropertyNames != "" {
+		if err := decodeUrlEncodedJSON(params.PropertyNames, &properties); err != nil {
+			rest.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	} else {
+		properties = append(properties, "*")
+	}
+
 	project := currentProject(req)
-	result, err := extract(project, params.Email, params.Latest, params.PropertyNames, params.QueryParams)
+	result, err := extract(project, params.Email, int(params.Latest), properties, params.QueryParams)
 
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
