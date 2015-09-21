@@ -22,7 +22,7 @@ This demo includes [keen-js](https://github.com/keen/keen-js), [Data Explorer](h
 ### Prerequisites
 
 * Go 1.4+
-* MongoDB 2.2+
+* MongoDB 2.2+ (See Status)
 * Sqlite3 (development)
 * Mysql, Postgres (production)
 
@@ -129,7 +129,7 @@ You can test chocolat by using docker compose:
 
 Chocolat is in active development.
 
-Currently, it just works at local development environment. It uses MongoDB as event data store, and aggregation framework. So far, I've concentrated on API specification, so chocolat just likes skeleton. From now, Data collecting and Aggregation feature should aim high performance, and scalability.
+Currently, it just works at local development environment. It uses MongoDB as event data store to implement aggregation features fast, MongoDB may be changed to another database. So far, I've concentrated on API specification, so chocolat just likes skeleton. From now, Data collecting and Aggregation feature should aim high performance, and scalability.
 
 ## Roadmap
 
