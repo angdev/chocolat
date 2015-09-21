@@ -16,7 +16,8 @@ func docToSchema(doc *query.RawExpr) interface{} {
 	delete(*doc, "_id")
 	delete(*doc, "chocolat")
 
-	collapsed := query.CollapseField(*doc)
+	collapsed := make(query.RawExpr)
+	query.CollapseField(*doc, &collapsed)
 
 	for k, v := range collapsed {
 		switch v.(type) {

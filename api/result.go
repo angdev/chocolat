@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/angdev/chocolat/lib/query"
 )
 
 type inspectResult struct {
@@ -23,7 +24,10 @@ func (this *queryGroupResult) MarshalJSON() ([]byte, error) {
 	result := make(RawResult)
 	result["result"] = this.Result
 
-	for k, v := range this.Groups {
+	collapsed := make(RawResult)
+	query.CollapseField(this.Groups, &collapsed)
+
+	for k, v := range collapsed {
 		result[k] = v
 	}
 

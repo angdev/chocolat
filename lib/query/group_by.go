@@ -38,7 +38,7 @@ func (this *GroupBy) Visit(v *Visitor, arel *Arel) {
 		groups[field] = Variablize("_id", field)
 	}
 	project["_id"] = false
-	project["groups"] = groups
+	project["groups"] = ExpandField(groups)
 	project["result"] = Variablize("result")
 
 	v.Collect(Stage{

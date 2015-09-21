@@ -1,32 +1,35 @@
 package query
 
 import (
+	"reflect"
 	"strings"
 )
 
-func CollapseField(doc RawExpr) RawExpr {
-	collapsed := RawExpr{}
+func CollapseField(in interface{}, out interface{}) {
+	inValue := reflect.ValueOf(in)
+	outValue := reflect.ValueOf(out).Elem()
 
-	var f func([]string, RawExpr)
-	f = func(level []string, cursor RawExpr) {
-		for k, v := range cursor {
-			switch v.(type) {
-			case RawExpr:
-				f(append(level, k), v.(RawExpr))
+	var f func([]string, reflect.Value)
+	f = func(level []string, cursor reflect.Value) {
+		for _, k := range cursor.MapKeys() {
+			v := cursor.MapIndex(k).Elem()
+			switch v.Kind() {
+			case reflect.Map:
+				f(append(level, k.String()), v)
 			default:
-				collapsed[strings.Join(append(level, k), ".")] = v
+				key := strings.Join(append(level, k.String()), ".")
+				outValue.SetMapIndex(reflect.ValueOf(key), v)
 			}
 		}
 	}
 
-	f([]string{}, doc)
-
-	return collapsed
+	f([]string{}, inValue)
 }
 
 func ExpandField(doc RawExpr) RawExpr {
 	expanded := RawExpr{}
-	collapsed := CollapseField(doc)
+	collapsed := make(RawExpr)
+	CollapseField(doc, &collapsed)
 
 	for k, v := range collapsed {
 		keys := strings.Split(k, ".")
