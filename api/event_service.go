@@ -82,7 +82,7 @@ func createEvent(p *model.Project, collName string, params CreateSingleEventPara
 	if result[0]["success"] == true {
 		return RawResult{"created": true}, nil
 	} else {
-		return RawResult{"created": false}, nil
+		return RawResult{"created": false, "error": result[0]["error"]}, nil
 	}
 }
 
@@ -102,8 +102,12 @@ func insertEvents(r *repo.Repository, event string, docs ...CreateSingleEventPar
 	result := []RawResult{}
 	for _, doc := range docs {
 		appendMetadata(doc)
+		if err := resolveKeenObject(doc); err != nil {
+			result = append(result, RawResult{"success": false, "error": err.Error()})
+			continue
+		}
 		if err := r.Insert(event, &doc); err != nil {
-			result = append(result, RawResult{"success": false})
+			result = append(result, RawResult{"success": false, "error": err.Error()})
 		} else {
 			result = append(result, RawResult{"success": true})
 		}
