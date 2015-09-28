@@ -77,7 +77,7 @@ func resolveKeenAddon(addon *KeenAddon) KeenAddonApplier {
 func resolveKeenObject(doc map[string]interface{}) error {
 	keenObject, ok := doc["keen"]
 	if !ok {
-		return KeenAddonError
+		return nil
 	}
 
 	var keen Keen
