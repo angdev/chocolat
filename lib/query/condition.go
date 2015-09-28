@@ -3,6 +3,7 @@ package query
 import (
 	"fmt"
 	"labix.org/v2/mgo/bson"
+	"regexp"
 )
 
 func NewCondition(field string, op string, value interface{}) *Condition {
@@ -35,10 +36,10 @@ func (this *Condition) OpExpr() RawExpr {
 	switch this.Op {
 	case "contains":
 		op = "$regex"
-		value = bson.RegEx{fmt.Sprintf("%s", this.Value.(string)), ""}
+		value = bson.RegEx{regexp.QuoteMeta(this.Value.(string)), ""}
 	case "not_contains":
 		op = "$not"
-		value = bson.RegEx{fmt.Sprintf("%s", this.Value.(string)), ""}
+		value = bson.RegEx{regexp.QuoteMeta(this.Value.(string)), ""}
 	default:
 		op = fmt.Sprintf("$%s", this.Op)
 		value = this.Value
